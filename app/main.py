@@ -3,6 +3,7 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.agents.legal_assistant import run_agent
 from app.chains.bruna_assistant import bruna_chat
+from app.orchestration.bruna_orchestrator import bruna_orchestrator
 from app.chains.contract_analysis import analyze_contract
 from app.chains.document_generation import generate_document
 from app.chains.legal_research import research
@@ -195,19 +196,25 @@ async def chain_document_generation(body: DocumentGenerationRequest):
 @app.post("/v1/assistant/bruna/chat", response_model=BrunaChatResponse)
 async def bruna_chat_endpoint(body: BrunaChatRequest):
     """
-    Bruna — assistente jurídica conversacional.
-    RAG + LLM em uma única chamada (ideal para chat contínuo).
+    Bruna — assistente jurídica conversacional com orchestration inteligente.
+    
+    Agora usa router que decide automaticamente:
+    - Chain (RAG + LLM) para perguntas gerais
+    - Agent + tools para buscar processos, prazos, clientes no sistema real
     """
     try:
         history = None
         if body.history:
             history = [{"role": m.role, "content": m.content} for m in body.history]
-        answer = await bruna_chat(
-            body.escritorio_id,
-            body.message,
-            body.use_rag,
-            history,
+        
+        # Usa orchestrator em vez da chain simples
+        answer, metadata = await bruna_orchestrator(
+            escritorio_id=body.escritorio_id,
+            message=body.message,
+            use_rag=body.use_rag,
+            history=history,
         )
+        
         return BrunaChatResponse(
             answer=answer,
             escritorio_id=body.escritorio_id,

@@ -39,6 +39,9 @@ class Settings(BaseSettings):
     agent_enabled: bool = True
     agent_max_iterations: int = 10
     agent_verbose: bool = True
+    
+    # Java API Integration
+    java_api_url: str = "http://localhost:8082/api"
 
     class Config:
         env_file = ".env"
