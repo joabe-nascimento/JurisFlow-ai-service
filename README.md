@@ -193,37 +193,6 @@ result = await run_agent(
 
 ---
 
-## 🎓 Conceitos Demonstrados (para CV/Entrevistas)
-
-### ✅ RAG (Retrieval-Augmented Generation)
-- Chunking inteligente (RecursiveCharacterTextSplitter)
-- Embeddings locais (sentence-transformers)
-- Vector store (FAISS)
-- Similarity search com score
-
-### ✅ LangChain
-- **Chains**: Sequências de raciocínio (prompt → LLM → parse)
-- **Agents**: ReAct pattern (Reasoning + Acting)
-- **Tools**: Ferramentas customizadas para agents
-- **Retrievers**: Integração RAG com chains
-
-### ✅ LLMs
-- Multi-provider (Groq, Azure, OpenAI)
-- Abstração via `get_llm()`
-- Temperature e max_tokens configuráveis
-
-### ✅ Engenharia de Prompts
-- Templates estruturados
-- Context injection (RAG)
-- Few-shot examples (implícito nos prompts)
-
-### ✅ Arquitetura de Microserviços
-- API Python isolada
-- Integração com backend Java via REST
-- CORS configurado para frontend
-
----
-
 ## 📊 Evolução Futura
 
 | Atual | Próximo |
@@ -303,37 +272,18 @@ curl -X POST http://localhost:8090/v1/agent/ask \
 
 ---
 
-## 💡 Por que essa stack?
+## 💡 Stack técnica
 
-### Para a vaga de **Engenheiro(a) de IA**:
-✅ **RAG** — requisito explícito da vaga  
-✅ **LangChain** — framework padrão para LLM apps  
-✅ **Agents** — demonstra conhecimento avançado  
-✅ **Python** — linguagem de IA  
-✅ **Azure-ready** — fácil migração para Azure OpenAI  
-✅ **Microserviços** — arquitetura moderna  
-
-### Palavras-chave no código (para recrutadores):
-- Retrieval-augmented generation (RAG)
-- LangChain chains
-- ReAct agents with tools
-- Vector embeddings (FAISS)
-- Semantic search
-- Prompt engineering
-- Azure OpenAI integration
-- Cognitive pipelines
+- **RAG** — FAISS, embeddings locais, busca semântica
+- **LangChain** — chains, agents ReAct e tools customizadas
+- **LLMs** — Groq, OpenRouter, Azure OpenAI e OpenAI via abstração multi-provider
+- **Arquitetura** — microserviço Python integrado ao backend Java via REST
 
 ---
 
 ## 👨‍💻 Autor
 
-Desenvolvido para **JurisFlow** como demonstração de conhecimento em:
-- Engenharia de IA
-- LangChain / LangGraph
-- RAG (Retrieval-Augmented Generation)
-- Agents com Tools
-- Integração com LLMs
-- Arquitetura de microserviços Python
+Parte do ecossistema **JurisFlow** — plataforma de gestão jurídica com IA.
 
 ---
 

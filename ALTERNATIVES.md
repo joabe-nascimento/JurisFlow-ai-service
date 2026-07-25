@@ -191,15 +191,15 @@ HUGGINGFACE_TOKEN=hf_sua_chave
 1. Use o `.env` que criei (já está configurado)
 2. Rode o serviço
 3. Teste os endpoints RAG no Swagger
-4. Demonstre busca semântica funcionando
+4. Valide a busca semântica
 
-### Para ENTREVISTAS (com LLM):
+### Para usar com LLM:
 1. Tente Groq novamente em algumas horas
 2. Se não der, use OpenRouter (cadastro rápido)
 3. Ou instale Ollama (funciona offline)
 
 ### Para PRODUÇÃO:
-- Azure OpenAI (o que a vaga pedia)
+- Azure OpenAI ou provider com SLA adequado
 
 ---
 
@@ -237,29 +237,14 @@ curl -X POST http://localhost:8090/v1/rag/default/search \
 }
 ```
 
-✅ **RAG funcionando PERFEITAMENTE sem LLM!**
-
----
-
-## 💡 Para o Currículo (mesmo sem LLM)
-
-Você pode colocar:
-- ✅ "Implementação de RAG com FAISS e embeddings semânticos"
-- ✅ "Vector search com cosine similarity"
-- ✅ "Chunking inteligente com LangChain"
-- ✅ "API FastAPI para retrieval augmented generation"
-
-Chains e Agents você menciona como "implementado e pronto para integração com LLM" (o código está lá, só falta a API key).
+✅ **RAG funcionando sem LLM!**
 
 ---
 
 ## ❓ FAQ
 
-**P: Posso demonstrar em entrevista sem LLM?**  
-R: Sim! Demonstre o RAG funcionando (é a parte mais importante). Chains/Agents você explica o código.
-
-**P: E se perguntarem sobre o LLM?**  
-R: "Implementei multi-provider (Groq, Azure, OpenAI). No dev usei Groq por ser gratuito, mas está pronto para Azure em produção. Posso demonstrar o RAG funcionando, que é a base de tudo."
+**P: Funciona sem LLM?**  
+R: Sim. RAG, busca semântica e indexação funcionam independentemente. Chains e agents precisam de um provider configurado.
 
 **P: Vale a pena instalar Ollama?**  
 R: Se tiver tempo e PC razoável (8GB+ RAM), sim. É a opção mais completa offline.

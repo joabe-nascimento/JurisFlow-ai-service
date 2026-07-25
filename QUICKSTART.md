@@ -124,7 +124,7 @@ Resposta:
 ## 🔥 Dicas
 
 ### LLM grátis vs pago
-- **Groq (grátis)**: Ótimo para dev/portfólio. Rate limits generosos.
+- **Groq (grátis)**: Bom para desenvolvimento. Rate limits generosos.
 - **Azure OpenAI (pago)**: Para produção. Melhor qualidade e SLA.
 
 ### Performance

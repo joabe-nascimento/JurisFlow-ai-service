@@ -96,12 +96,6 @@ async def test():
             print("  ✅ Chunking inteligente")
             print("  ✅ Multi-tenant (por escritório)")
             print()
-            print("🎯 Para o currículo:")
-            print("  - Implementação de RAG (Retrieval-Augmented Generation)")
-            print("  - Vector search com FAISS")
-            print("  - Embeddings semânticos")
-            print("  - LangChain + FastAPI")
-            print()
             print("🔗 Acesse: http://localhost:8090/docs")
             print()
             
