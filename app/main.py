@@ -8,6 +8,7 @@ from app.chains.contract_analysis import analyze_contract
 from app.chains.document_generation import generate_document
 from app.chains.legal_research import research
 from app.config import settings
+from app.llm.errors import LLMRateLimitError
 from app.llm.provider import get_provider_info
 from app.models import (
     AgentRequest,
@@ -220,6 +221,8 @@ async def bruna_chat_endpoint(body: BrunaChatRequest):
             escritorio_id=body.escritorio_id,
             used_rag=body.use_rag,
         )
+    except LLMRateLimitError as e:
+        raise HTTPException(status_code=429, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na Bruna: {str(e)}")
 

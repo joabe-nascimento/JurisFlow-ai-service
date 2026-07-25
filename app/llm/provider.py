@@ -1,4 +1,4 @@
-"""Provedor de LLM — suporta Groq (grátis), Azure OpenAI e OpenAI."""
+"""Provedor de LLM — suporta Groq (grátis), OpenRouter, Azure OpenAI e OpenAI."""
 
 from typing import Optional
 
@@ -9,18 +9,28 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from app.config import settings
 
 
-def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseChatModel:
-    """
-    Retorna o LLM configurado baseado no provider.
-    
-    Providers suportados:
-    - groq: GRÁTIS (Llama 3.3 70B, Mixtral 8x7B) - https://console.groq.com
-    - openrouter: GRÁTIS/pago via https://openrouter.ai
-    - azure: Azure OpenAI (GPT-4o) - PAGO
-    - openai: OpenAI (GPT-4o-mini) - PAGO
-    """
-    provider = settings.llm_provider.lower()
-    
+def get_openrouter_model_list() -> list[str]:
+    """Modelos OpenRouter em ordem de tentativa (router + fallbacks)."""
+    models: list[str] = []
+    if settings.openrouter_model:
+        models.append(settings.openrouter_model.strip())
+    if settings.openrouter_fallback_models:
+        for item in settings.openrouter_fallback_models.split(","):
+            item = item.strip()
+            if item and item not in models:
+                models.append(item)
+    return models or ["openrouter/free"]
+
+
+def get_llm_by_provider(
+    provider: str,
+    temperature: float = 0.0,
+    max_tokens: Optional[int] = None,
+    model: Optional[str] = None,
+) -> BaseChatModel:
+    """Instancia LLM para um provider específico."""
+    provider = provider.lower()
+
     if provider == "groq":
         if not settings.groq_api_key:
             raise ValueError(
@@ -34,16 +44,17 @@ def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseC
             max_tokens=max_tokens or 4096,
         )
 
-    elif provider == "openrouter":
+    if provider == "openrouter":
         if not settings.openrouter_api_key:
             raise ValueError(
                 "openrouter_api_key não configurada. "
                 "Obtenha em https://openrouter.ai/keys"
             )
+        model_id = model or settings.openrouter_model
         return ChatOpenAI(
             base_url="https://openrouter.ai/api/v1",
             api_key=settings.openrouter_api_key,
-            model=settings.openrouter_model,
+            model=model_id,
             temperature=temperature,
             max_tokens=max_tokens or 4096,
             default_headers={
@@ -51,8 +62,8 @@ def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseC
                 "X-Title": settings.openrouter_site_name,
             },
         )
-    
-    elif provider == "azure":
+
+    if provider == "azure":
         if not settings.azure_openai_key or not settings.azure_openai_endpoint:
             raise ValueError("Azure OpenAI não configurado (chave ou endpoint faltando)")
         return AzureChatOpenAI(
@@ -63,8 +74,8 @@ def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseC
             max_tokens=max_tokens or 4096,
             api_version="2024-02-15-preview",
         )
-    
-    elif provider == "openai":
+
+    if provider == "openai":
         if not settings.openai_api_key:
             raise ValueError("openai_api_key não configurada")
         return ChatOpenAI(
@@ -73,25 +84,39 @@ def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseC
             temperature=temperature,
             max_tokens=max_tokens or 4096,
         )
-    
-    else:
-        raise ValueError(
-            f"Provider '{provider}' não suportado. "
-            "Use: groq | openrouter | azure | openai"
-        )
+
+    raise ValueError(
+        f"Provider '{provider}' não suportado. "
+        "Use: groq | openrouter | azure | openai"
+    )
+
+
+def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseChatModel:
+    """Retorna o LLM configurado em LLM_PROVIDER."""
+    return get_llm_by_provider(settings.llm_provider, temperature, max_tokens)
+
+
+def get_provider_attempt_order() -> list[str]:
+    """Ordem de providers para tentativa com fallback (ex.: OpenRouter → Groq)."""
+    primary = settings.llm_provider.lower()
+    order: list[str] = [primary]
+    if settings.groq_api_key and primary != "groq":
+        order.append("groq")
+    return order
 
 
 def get_provider_info() -> dict:
     """Retorna informações sobre o provider LLM atual."""
     provider = settings.llm_provider.lower()
-    
+
     info = {
         "provider": provider,
         "configured": False,
         "model": "",
         "cost": "",
+        "fallback_groq": bool(settings.groq_api_key),
     }
-    
+
     if provider == "groq":
         info["configured"] = bool(settings.groq_api_key)
         info["model"] = settings.groq_model
@@ -108,5 +133,5 @@ def get_provider_info() -> dict:
         info["configured"] = bool(settings.openai_api_key)
         info["model"] = settings.openai_model
         info["cost"] = "Pago (OpenAI)"
-    
+
     return info

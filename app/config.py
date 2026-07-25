@@ -24,7 +24,12 @@ class Settings(BaseSettings):
 
     # OpenRouter (GRÁTIS com modelos free + opção paga)
     openrouter_api_key: str = ""
-    openrouter_model: str = "google/gemma-4-26b-a4b-it:free"
+    openrouter_model: str = "openrouter/free"
+    openrouter_fallback_models: str = (
+        "google/gemma-4-26b-a4b-it:free,"
+        "nvidia/nemotron-nano-9b-v2:free,"
+        "openai/gpt-oss-20b:free"
+    )
     openrouter_site_url: str = "http://localhost:3000"
     openrouter_site_name: str = "JurisFlow"
     

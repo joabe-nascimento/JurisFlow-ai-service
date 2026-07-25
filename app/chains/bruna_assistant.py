@@ -3,7 +3,12 @@
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
-from app.llm.provider import get_llm
+from app.llm.errors import LLMRateLimitError, is_rate_limit_error
+from app.llm.provider import (
+    get_llm_by_provider,
+    get_openrouter_model_list,
+    get_provider_attempt_order,
+)
 from app.rag.langchain_store import langchain_rag_store
 
 BRUNA_TEMPLATE = """Você é Bruna, assistente jurídica do JurisFlow. Responda de forma natural e conversacional, como uma advogada experiente conversando com um colega.
@@ -61,14 +66,7 @@ def _retrieve_context(escritorio_id: str, message: str, use_rag: bool) -> str:
     )
 
 
-async def bruna_chat(
-    escritorio_id: str,
-    message: str,
-    use_rag: bool = True,
-    history: list | None = None,
-) -> str:
-    """Chat conversacional com Bruna (1 chamada LLM + RAG)."""
-    llm = get_llm(temperature=0.4, max_tokens=1024)
+def _build_chain(llm):
     prompt = ChatPromptTemplate.from_template(BRUNA_TEMPLATE)
 
     def prepare(inputs: dict) -> dict:
@@ -80,12 +78,55 @@ async def bruna_chat(
             "history": _format_history(inputs.get("history")),
         }
 
-    chain = prepare | prompt | llm | StrOutputParser()
-    return await chain.ainvoke(
-        {
-            "message": message,
-            "escritorio_id": escritorio_id,
-            "use_rag": use_rag,
-            "history": history,
-        }
+    return prepare | prompt | llm | StrOutputParser()
+
+
+async def bruna_chat(
+    escritorio_id: str,
+    message: str,
+    use_rag: bool = True,
+    history: list | None = None,
+) -> str:
+    """Chat conversacional com Bruna (1 chamada LLM + RAG), com fallback de provider."""
+    inputs = {
+        "message": message,
+        "escritorio_id": escritorio_id,
+        "use_rag": use_rag,
+        "history": history,
+    }
+
+    providers = get_provider_attempt_order()
+    last_rate_limit: Exception | None = None
+
+    for provider in providers:
+        models = (
+            get_openrouter_model_list()
+            if provider == "openrouter"
+            else [None]
+        )
+        for model_id in models:
+            try:
+                llm = get_llm_by_provider(
+                    provider,
+                    temperature=0.4,
+                    max_tokens=1024,
+                    model=model_id,
+                )
+                chain = _build_chain(llm)
+                return await chain.ainvoke(inputs)
+            except Exception as exc:
+                if is_rate_limit_error(exc):
+                    last_rate_limit = exc
+                    # Limite diário da conta — outros modelos :free não ajudam
+                    if "free-models-per-day" in str(exc).lower():
+                        break
+                    continue
+                raise
+        if last_rate_limit and "free-models-per-day" in str(last_rate_limit).lower():
+            break
+
+    raise LLMRateLimitError(
+        "Limite diário do provedor LLM atingido (OpenRouter free: 50 req/dia). "
+        "Configure GROQ_API_KEY no .env como fallback grátis ou aguarde o reset. "
+        f"Detalhe: {last_rate_limit}"
     )
