@@ -1,19 +1,29 @@
-"""Router inteligente que decide a melhor estratégia para cada pergunta."""
+"""Router inteligente que decide a melhor estratégia (configurável por vertical)."""
 
 from typing import Literal, Optional
 from enum import Enum
+import re
 
 from app.llm.provider import get_llm
+from app.verticals.loader import get_current_vertical
 
 
 class QueryIntent(str, Enum):
-    """Tipos de intenção identificados."""
+    """Tipos de intenção identificados (dinâmico baseado no vertical)."""
     BUSCAR_PROCESSO = "buscar_processo"
     VERIFICAR_PRAZO = "verificar_prazo"
     BUSCAR_CLIENTE = "buscar_cliente"
     CALCULAR_PRAZO = "calcular_prazo"
     PESQUISA_JURIDICA = "pesquisa_juridica"
     CONVERSACIONAL = "conversacional"
+    
+    @classmethod
+    def from_string(cls, intent: str) -> "QueryIntent":
+        """Cria um QueryIntent a partir de uma string."""
+        try:
+            return cls(intent)
+        except ValueError:
+            return cls.CONVERSACIONAL
 
 
 class RouteDecision:
@@ -36,88 +46,78 @@ class RouteDecision:
 
 async def classify_query_intent(message: str) -> RouteDecision:
     """
-    Classifica a intenção da pergunta e decide a estratégia.
+    Classifica a intenção da pergunta usando configurações do vertical.
     
-    Lógica de decisão:
-    - Buscar processo/cliente/prazo específico → use_agent=True (precisa de tools)
-    - Cálculo de prazo → use_agent=True (tool calcular_prazo)
-    - Pesquisa jurídica geral → use_agent=False, use_rag=True
-    - Conversação geral → use_agent=False, use_rag=True
+    Carrega padrões de router.yaml e aplica lógica de detecção.
     """
+    vertical = get_current_vertical()
+    intents_config = vertical.router_intents
     
     message_lower = message.lower()
     
-    # Padrões de detecção simples (pode ser melhorado com LLM)
-    
-    # Busca de processo (número específico)
-    if any(pattern in message_lower for pattern in ["processo", "nº", "numero"]):
-        # Tenta extrair número de processo
-        import re
-        processo_pattern = r'\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}'
-        match = re.search(processo_pattern, message)
-        if match:
+    # Itera pelos intents configurados no vertical
+    for intent_config in intents_config:
+        intent_id = intent_config.get("intent", "conversacional")
+        keywords = intent_config.get("keywords", [])
+        regex_patterns = intent_config.get("regex_patterns", [])
+        conditions = intent_config.get("conditions", {})
+        use_agent = intent_config.get("use_agent", False)
+        use_rag = intent_config.get("use_rag", True)
+        explanation = intent_config.get("explanation", f"Detectado intent: {intent_id}")
+        is_default = intent_config.get("default", False)
+        
+        # Se for intent default, guarda para usar se nenhum outro match
+        if is_default:
+            default_intent = RouteDecision(
+                intent=QueryIntent.from_string(intent_id),
+                use_agent=use_agent,
+                use_rag=use_rag,
+                explanation=explanation
+            )
+            continue
+        
+        # Verifica keywords
+        keywords_match = any(kw in message_lower for kw in keywords) if keywords else False
+        
+        # Verifica regex patterns
+        regex_match = False
+        extracted_entities = {}
+        for pattern in regex_patterns:
+            match = re.search(pattern, message)
+            if match:
+                regex_match = True
+                extracted_entities[f"match_{intent_id}"] = match.group()
+                break
+        
+        # Verifica condições especiais
+        conditions_match = True
+        if conditions:
+            # has_processo_mention
+            if "has_processo_mention" in conditions:
+                expected = conditions["has_processo_mention"]
+                has_processo = "processo" in message_lower or any(c.isdigit() for c in message)
+                if has_processo != expected:
+                    conditions_match = False
+            
+            # has_date
+            if "has_date" in conditions:
+                expected = conditions["has_date"]
+                has_date = any(c.isdigit() for c in message)
+                if has_date != expected:
+                    conditions_match = False
+        
+        # Se match em keywords OU regex, E condições satisfeitas
+        if (keywords_match or regex_match) and conditions_match:
             return RouteDecision(
-                intent=QueryIntent.BUSCAR_PROCESSO,
-                use_agent=True,
-                use_rag=False,
-                explanation="Detectado número de processo - usando agent com tool buscar_processo",
-                extracted_entities={"numero_processo": match.group()}
+                intent=QueryIntent.from_string(intent_id),
+                use_agent=use_agent,
+                use_rag=use_rag,
+                explanation=explanation,
+                extracted_entities=extracted_entities or None
             )
     
-    # Verificação de prazos
-    if any(pattern in message_lower for pattern in ["prazo", "vencimento", "vence", "quando vence"]):
-        # Se menciona processo específico, usa agent
-        if "processo" in message_lower or any(c.isdigit() for c in message):
-            return RouteDecision(
-                intent=QueryIntent.VERIFICAR_PRAZO,
-                use_agent=True,
-                use_rag=True,
-                explanation="Pergunta sobre prazo com possível referência a processo - usando agent"
-            )
-        # Se pergunta sobre prazo genérico (ex: "qual o prazo para contestar")
-        else:
-            return RouteDecision(
-                intent=QueryIntent.PESQUISA_JURIDICA,
-                use_agent=False,
-                use_rag=True,
-                explanation="Pergunta sobre prazo genérico - usando RAG + LLM direto"
-            )
-    
-    # Busca de cliente
-    if any(pattern in message_lower for pattern in ["cliente", "contato", "telefone do cliente"]):
-        return RouteDecision(
-            intent=QueryIntent.BUSCAR_CLIENTE,
-            use_agent=True,
-            use_rag=False,
-            explanation="Busca de cliente - usando agent com tool buscar_cliente"
-        )
-    
-    # Cálculo de prazo (com data específica)
-    if any(pattern in message_lower for pattern in ["calcular prazo", "contar", "a partir de"]):
-        if any(c.isdigit() for c in message):  # Tem data
-            return RouteDecision(
-                intent=QueryIntent.CALCULAR_PRAZO,
-                use_agent=True,
-                use_rag=True,
-                explanation="Cálculo de prazo com data - usando agent com tool calcular_prazo"
-            )
-    
-    # Pesquisa jurídica (artigos, leis, jurisprudência)
-    if any(pattern in message_lower for pattern in ["artigo", "art.", "lei", "código", "cpc", "clt", "lgpd", "jurisprudência"]):
-        return RouteDecision(
-            intent=QueryIntent.PESQUISA_JURIDICA,
-            use_agent=False,
-            use_rag=True,
-            explanation="Pesquisa jurídica - usando RAG + LLM"
-        )
-    
-    # Conversação geral (default)
-    return RouteDecision(
-        intent=QueryIntent.CONVERSACIONAL,
-        use_agent=False,
-        use_rag=True,
-        explanation="Conversa geral - usando RAG + LLM"
-    )
+    # Se nenhum intent matched, retorna o default
+    return default_intent
 
 
 async def route_query(

@@ -1,0 +1,59 @@
+# ════════════════════════════════════════════════════════════════════════════
+# LEGAL VERTICAL - MAIN CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════
+# Configuração principal do vertical jurídico (JurisFlow)
+
+vertical:
+  id: "legal"
+  name: "JurisFlow"
+  description: "Plataforma de IA para escritórios de advocacia"
+  domain: "Jurídico"
+
+assistant:
+  name: "Bruna"
+  role: "Assistente Jurídica"
+  prompt_file: "assistant.yaml"
+
+# URL da API de integração (backend específico deste produto)
+integration:
+  api_url: "${LEGAL_API_URL:http://localhost:8082/api}"
+  timeout: 10.0
+
+# Chains disponíveis neste vertical
+chains:
+  - id: "contract_analysis"
+    name: "Análise de Contratos"
+    prompt_file: "contract_analysis.yaml"
+    enabled: true
+  
+  - id: "document_summary"
+    name: "Resumo de Documentos"
+    prompt_file: "document_summary.yaml"
+    enabled: true
+  
+  - id: "jurisprudence_analysis"
+    name: "Análise de Jurisprudência"
+    prompt_file: "jurisprudence_analysis.yaml"
+    enabled: true
+  
+  - id: "case_prediction"
+    name: "Previsão de Resultado"
+    prompt_file: "case_prediction.yaml"
+    enabled: true
+  
+  - id: "document_generation"
+    name: "Geração de Documentos"
+    prompt_file: "document_generation.yaml"
+    enabled: true
+  
+  - id: "legal_research"
+    name: "Pesquisa Jurídica"
+    prompt_file: "legal_research.yaml"
+    enabled: true
+
+# Agente e Tools disponíveis
+agent:
+  enabled: true
+  max_iterations: 10
+  verbose: true
+  tools_file: "tools.yaml"

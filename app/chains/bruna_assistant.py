@@ -1,4 +1,4 @@
-"""Bruna — assistente jurídica conversacional com RAG + LLM."""
+"""Assistente conversacional com RAG + LLM (configurável por vertical)."""
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -10,32 +10,7 @@ from app.llm.provider import (
     get_provider_attempt_order,
 )
 from app.rag.langchain_store import langchain_rag_store
-
-BRUNA_TEMPLATE = """Você é Bruna, assistente jurídica do JurisFlow. Responda de forma natural e conversacional, como uma advogada experiente conversando com um colega.
-
-BASE DE CONHECIMENTO:
-{context}
-
-HISTÓRICO DA CONVERSA:
-{history}
-
-PERGUNTA ATUAL:
-{message}
-
-EXEMPLO DE RESPOSTA IDEAL (use como referência de tom e estilo):
-"Sim, o prazo para contestar é de 15 dias úteis, conforme o art. 335 do CPC. Esse prazo começa a contar da audiência de conciliação (se não houver acordo) ou da citação. Se tiver mais de um réu com advogados diferentes, o prazo é em dobro. Qualquer dúvida sobre como calcular, é só falar."
-
-INSTRUÇÕES CRÍTICAS:
-- NUNCA use listas com bullets (*, -, •) ou numeradas
-- NUNCA use subtítulos ou seções
-- NUNCA use negritos excessivos (máximo 2 palavras em toda a resposta)
-- Escreva em parágrafos corridos e naturais
-- Cite leis de forma fluida no texto
-- Se já conversou antes, não se apresente novamente
-- Seja breve (2-3 parágrafos pequenos)
-- Termine convidando para mais perguntas
-
-RESPONDA AGORA:"""
+from app.verticals.loader import get_current_vertical
 
 
 def _format_history(history: list | None) -> str:
@@ -67,7 +42,18 @@ def _retrieve_context(escritorio_id: str, message: str, use_rag: bool) -> str:
 
 
 def _build_chain(llm):
-    prompt = ChatPromptTemplate.from_template(BRUNA_TEMPLATE)
+    vertical = get_current_vertical()
+    prompt_config = vertical.load_prompt(vertical.assistant_prompt_file)
+    
+    template = prompt_config["system_prompt"].format(
+        assistant_name=vertical.assistant_name,
+        product_name=vertical.name,
+        context="{context}",
+        history="{history}",
+        message="{message}",
+    )
+    
+    prompt = ChatPromptTemplate.from_template(template)
 
     def prepare(inputs: dict) -> dict:
         return {
@@ -127,6 +113,7 @@ async def bruna_chat(
 
     raise LLMRateLimitError(
         "Limite diário do provedor LLM atingido (OpenRouter free: 50 req/dia). "
-        "Configure GROQ_API_KEY no .env como fallback grátis ou aguarde o reset. "
+        "Configure AZURE_OPENAI_KEY/AZURE_OPENAI_ENDPOINT no .env como fallback "
+        "ou aguarde o reset do provedor. "
         f"Detalhe: {last_rate_limit}"
     )

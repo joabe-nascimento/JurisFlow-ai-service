@@ -1,0 +1,81 @@
+# ════════════════════════════════════════════════════════════════════════════
+# LEGAL VERTICAL - TOOLS CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════
+# Configuração das tools disponíveis para o agente
+
+# Tools que interagem com a API de integração (backend do produto)
+integration_tools:
+  - name: "buscar_processo"
+    description: "Busca informações de um processo no sistema"
+    endpoint: "/v1/processos/search"
+    method: "GET"
+    parameters:
+      - name: "numero_processo"
+        type: "string"
+        required: true
+        description: "Número do processo (formato: 0000000-00.0000.0.00.0000)"
+      - name: "escritorio_id"
+        type: "string"
+        required: false
+        default: "default"
+    
+  - name: "listar_prazos_proximos"
+    description: "Lista prazos processuais que vencem nos próximos dias"
+    endpoint: "/v1/prazos/proximos"
+    method: "GET"
+    parameters:
+      - name: "dias"
+        type: "integer"
+        required: false
+        default: 7
+        description: "Número de dias à frente para buscar"
+      - name: "escritorio_id"
+        type: "string"
+        required: false
+        default: "default"
+  
+  - name: "buscar_cliente"
+    description: "Busca informações de um cliente no sistema"
+    endpoint: "/v1/clientes/search"
+    method: "GET"
+    parameters:
+      - name: "nome"
+        type: "string"
+        required: true
+        description: "Nome ou parte do nome do cliente"
+      - name: "escritorio_id"
+        type: "string"
+        required: false
+        default: "default"
+  
+  - name: "verificar_prazo_processo"
+    description: "Verifica prazos específicos de um processo"
+    endpoint: "/v1/prazos/processo/{numero_processo}"
+    method: "GET"
+    parameters:
+      - name: "numero_processo"
+        type: "string"
+        required: true
+        description: "Número do processo"
+
+# Tools locais (não dependem de API externa)
+local_tools:
+  - name: "calcular_prazo"
+    module: "app.agents.tools"
+    function: "calcular_prazo"
+    description: "Calcula prazo processual a partir de uma data"
+  
+  - name: "buscar_conhecimento"
+    module: "app.agents.tools"
+    function: "buscar_conhecimento"
+    description: "Busca na base de conhecimento (RAG) do escritório"
+  
+  - name: "buscar_jurisprudencia"
+    module: "app.agents.tools"
+    function: "buscar_jurisprudencia"
+    description: "Busca jurisprudência e súmulas (simulado)"
+  
+  - name: "calcular_honorarios"
+    module: "app.agents.tools"
+    function: "calcular_honorarios"
+    description: "Calcula honorários advocatícios conforme tabela OAB"

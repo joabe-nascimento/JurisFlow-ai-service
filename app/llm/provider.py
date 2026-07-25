@@ -1,9 +1,8 @@
-"""Provedor de LLM — suporta Groq (grátis), OpenRouter, Azure OpenAI e OpenAI."""
+"""Provedor de LLM — suporta OpenRouter, Azure OpenAI e OpenAI."""
 
 from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
-from langchain_groq import ChatGroq
 from langchain_openai import AzureChatOpenAI, ChatOpenAI
 
 from app.config import settings
@@ -30,19 +29,6 @@ def get_llm_by_provider(
 ) -> BaseChatModel:
     """Instancia LLM para um provider específico."""
     provider = provider.lower()
-
-    if provider == "groq":
-        if not settings.groq_api_key:
-            raise ValueError(
-                "groq_api_key não configurada. "
-                "Obtenha grátis em https://console.groq.com/keys"
-            )
-        return ChatGroq(
-            groq_api_key=settings.groq_api_key,
-            model_name=settings.groq_model,
-            temperature=temperature,
-            max_tokens=max_tokens or 4096,
-        )
 
     if provider == "openrouter":
         if not settings.openrouter_api_key:
@@ -87,7 +73,7 @@ def get_llm_by_provider(
 
     raise ValueError(
         f"Provider '{provider}' não suportado. "
-        "Use: groq | openrouter | azure | openai"
+        "Use: openrouter | azure | openai"
     )
 
 
@@ -97,11 +83,13 @@ def get_llm(temperature: float = 0.0, max_tokens: Optional[int] = None) -> BaseC
 
 
 def get_provider_attempt_order() -> list[str]:
-    """Ordem de providers para tentativa com fallback (ex.: OpenRouter → Groq)."""
+    """Ordem de providers para tentativa com fallback (ex.: OpenRouter → Azure)."""
     primary = settings.llm_provider.lower()
     order: list[str] = [primary]
-    if settings.groq_api_key and primary != "groq":
-        order.append("groq")
+    if settings.azure_openai_key and settings.azure_openai_endpoint and primary != "azure":
+        order.append("azure")
+    elif settings.openai_api_key and primary != "openai":
+        order.append("openai")
     return order
 
 
@@ -114,14 +102,10 @@ def get_provider_info() -> dict:
         "configured": False,
         "model": "",
         "cost": "",
-        "fallback_groq": bool(settings.groq_api_key),
+        "fallback_azure": bool(settings.azure_openai_key and settings.azure_openai_endpoint),
     }
 
-    if provider == "groq":
-        info["configured"] = bool(settings.groq_api_key)
-        info["model"] = settings.groq_model
-        info["cost"] = "GRÁTIS"
-    elif provider == "openrouter":
+    if provider == "openrouter":
         info["configured"] = bool(settings.openrouter_api_key)
         info["model"] = settings.openrouter_model
         info["cost"] = "Grátis (modelos :free) ou pago"

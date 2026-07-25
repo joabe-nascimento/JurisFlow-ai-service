@@ -1,48 +1,30 @@
-"""Chain para geração de documentos jurídicos (petições, contratos)."""
+"""Chain para geração de documentos (configurável por vertical)."""
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.llm.provider import get_llm
 from app.rag.langchain_store import langchain_rag_store
+from app.verticals.loader import get_current_vertical
 
 
 def create_document_generation_chain(escritorio_id: str):
     """
-    Chain: Gera minutas de documentos jurídicos.
+    Chain: Gera minutas de documentos.
     
     Fluxo:
     1. Busca templates/exemplos no RAG
     2. Gera documento baseado nos dados fornecidos
     3. Retorna minuta completa
     """
+    vertical = get_current_vertical()
+    prompt_config = vertical.load_prompt("document_generation")
     
-    llm = get_llm(temperature=0.3)  # Um pouco de criatividade
+    temperature = prompt_config.get("temperature", 0.3)
+    max_tokens = prompt_config.get("max_tokens", 3000)
+    template = prompt_config["system_prompt"]
     
-    template = """Você é um advogado redator de documentos jurídicos.
-
-## Tipo de Documento:
-{document_type}
-
-## Dados Fornecidos:
-{data}
-
-## Referências (RAG):
-{context}
-
-## Instruções:
-1. Gere uma minuta profissional do documento solicitado
-2. Use linguagem técnica apropriada
-3. Inclua todas as cláusulas necessárias
-4. Deixe campos editáveis entre [colchetes] quando dados específicos faltarem
-5. Siga formato padrão brasileiro
-
-## Formato de Resposta:
-[Documento completo formatado]
-
----
-Documento:"""
-    
+    llm = get_llm(temperature=temperature, max_tokens=max_tokens)
     prompt = ChatPromptTemplate.from_template(template)
     
     def prepare_inputs(inputs: dict) -> dict:

@@ -16,10 +16,11 @@ Stack Python para JurisFlow com foco em **Engenharia de IA** moderna: Retrieval-
                                                      │
                      ┌───────────────────────────────┴─────────────┐
                      │                                               │
-                ┌────▼────┐  ┌────────┐  ┌────────┐  ┌──────────┐  │
-                │   RAG   │  │ Chains │  │ Agents │  │   LLMs   │  │
-                │  FAISS  │  │        │  │ Tools  │  │  (Groq)  │  │
-                └─────────┘  └────────┘  └────────┘  └──────────┘  │
+                ┌────▼────┐  ┌────────┐  ┌────────┐  ┌───────────────┐│
+                │   RAG   │  │ Chains │  │ Agents │  │     LLMs      ││
+                │  FAISS  │  │        │  │ Tools  │  │ (OpenRouter/  ││
+                │         │  │        │  │        │  │  Azure OpenAI)││
+                └─────────┘  └────────┘  └────────┘  └───────────────┘│
                                                                      │
                                             Embeddings (local)  ─────┘
 ```
@@ -47,8 +48,8 @@ Agente inteligente com acesso a tools especializadas:
 - `calcular_honorarios`: Calcula honorários conforme Tabela OAB
 
 ### 4️⃣ **LLMs (Language Models)**
-- **Groq (GRÁTIS)**: Llama 3.3 70B, Mixtral 8x7B — ideal para desenvolvimento
-- **Azure OpenAI (PAGO)**: GPT-4o — para produção
+- **OpenRouter (GRÁTIS/PAGO)**: modelos `:free` — ideal para desenvolvimento
+- **Azure OpenAI (PAGO)**: GPT-4o — para produção (também usado como fallback automático)
 - **OpenAI (PAGO)**: GPT-4o-mini — alternativa
 
 ---
@@ -68,16 +69,16 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 3. Configurar LLM (Groq grátis)
-1. Obtenha sua API key grátis em: https://console.groq.com/keys
+### 3. Configurar LLM (OpenRouter grátis)
+1. Obtenha sua API key grátis em: https://openrouter.ai/keys
 2. Copie `.env.example` para `.env`:
    ```bash
    cp .env.example .env
    ```
 3. Edite `.env` e adicione sua chave:
    ```env
-   LLM_PROVIDER=groq
-   GROQ_API_KEY=gsk_your_key_here
+   LLM_PROVIDER=openrouter
+   OPENROUTER_API_KEY=sk-or-v1-your_key_here
    RETRIEVAL_METHOD=langchain
    ```
 
@@ -200,7 +201,7 @@ result = await run_agent(
 | FAISS local | **pgvector** (PostgreSQL) ou **Azure AI Search** |
 | Embeddings locais | **Azure OpenAI Embeddings** (ada-002) |
 | Agents custom | **LangGraph** (workflows complexos) |
-| Groq free tier | **Azure OpenAI** em produção |
+| OpenRouter free tier | **Azure OpenAI** em produção |
 | Jurisprudência simulada | **API STJ/STF** (tribunais oficiais) |
 | Pipeline simples | **Multi-agent orchestration** (LangGraph) |
 
@@ -238,8 +239,8 @@ Ver `.env.example` para configuração completa.
 
 **Mínimo necessário:**
 ```env
-LLM_PROVIDER=groq
-GROQ_API_KEY=gsk_your_key_here  # https://console.groq.com/keys
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-v1-your_key_here  # https://openrouter.ai/keys
 RETRIEVAL_METHOD=langchain
 ```
 
@@ -276,7 +277,7 @@ curl -X POST http://localhost:8090/v1/agent/ask \
 
 - **RAG** — FAISS, embeddings locais, busca semântica
 - **LangChain** — chains, agents ReAct e tools customizadas
-- **LLMs** — Groq, OpenRouter, Azure OpenAI e OpenAI via abstração multi-provider
+- **LLMs** — OpenRouter, Azure OpenAI e OpenAI via abstração multi-provider
 - **Arquitetura** — microserviço Python integrado ao backend Java via REST
 
 ---
@@ -290,7 +291,7 @@ Parte do ecossistema **JurisFlow** — plataforma de gestão jurídica com IA.
 ## 📚 Referências
 
 - [LangChain Docs](https://python.langchain.com/)
-- [Groq API (Free)](https://console.groq.com/)
+- [OpenRouter API (Free tier)](https://openrouter.ai/)
 - [FAISS](https://github.com/facebookresearch/faiss)
 - [Sentence Transformers](https://www.sbert.net/)
 - [FastAPI](https://fastapi.tiangolo.com/)

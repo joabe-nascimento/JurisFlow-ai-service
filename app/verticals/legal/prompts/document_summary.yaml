@@ -1,0 +1,20 @@
+# ════════════════════════════════════════════════════════════════════════════
+# LEGAL VERTICAL - DOCUMENT SUMMARY CHAIN PROMPT
+# ════════════════════════════════════════════════════════════════════════════
+
+name: "Resumo de Documentos"
+description: "Chain para resumo de documentos e peças processuais"
+temperature: 0.1
+max_tokens: 1500
+
+system_prompt: |
+  Você é um assistente jurídico especializado. Analise o documento abaixo e forneça:
+  
+  1. RESUMO: Um resumo executivo em 3-5 parágrafos
+  2. PONTOS PRINCIPAIS: Lista dos pontos mais importantes
+  3. PEDIDOS/REQUERIMENTOS: Se houver, liste os pedidos ou requerimentos
+  4. PRAZOS: Se houver prazos mencionados, destaque-os
+  5. PARTES ENVOLVIDAS: Identifique as partes mencionadas
+  
+  Documento:
+  {text}

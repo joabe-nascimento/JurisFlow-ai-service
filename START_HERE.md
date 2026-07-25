@@ -6,7 +6,7 @@ Motor de IA do JurisFlow com:
 - **RAG** (FAISS + embeddings semânticos)
 - **3 Chains** (análise de contratos, pesquisa, geração)
 - **Agent com 4 Tools** (ReAct pattern)
-- **Multi-LLM** (Groq, OpenRouter, Azure, OpenAI)
+- **Multi-LLM** (OpenRouter, Azure OpenAI, OpenAI)
 - **16 Endpoints** FastAPI
 
 ---
@@ -28,9 +28,9 @@ uvicorn app.main:app --reload --port 8090
 
 Abra: http://localhost:8090/docs
 
-Configure `.env` conforme `.env.example` (OpenRouter, Groq ou outro provider).
+Configure `.env` conforme `.env.example` (OpenRouter, Azure OpenAI ou OpenAI).
 
-**⚠️ Problema com Groq?** Veja `ALTERNATIVES.md`
+**⚠️ Problemas com o provider?** Veja `ALTERNATIVES.md`
 
 ---
 

@@ -1,52 +1,30 @@
-"""Chain para pesquisa jurídica com RAG."""
+"""Chain para pesquisa com RAG (configurável por vertical)."""
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.llm.provider import get_llm
 from app.rag.langchain_store import langchain_rag_store
+from app.verticals.loader import get_current_vertical
 
 
 def create_legal_research_chain(escritorio_id: str):
     """
-    Chain: Pesquisa jurídica com RAG.
+    Chain: Pesquisa com RAG.
     
     Fluxo:
     1. Busca no RAG documentos relevantes
     2. Sintetiza resposta baseada no contexto
     3. Retorna com fontes citadas
     """
+    vertical = get_current_vertical()
+    prompt_config = vertical.load_prompt("legal_research")
     
-    llm = get_llm(temperature=0.1)
+    temperature = prompt_config.get("temperature", 0.2)
+    max_tokens = prompt_config.get("max_tokens", 1500)
+    template = prompt_config["system_prompt"]
     
-    template = """Você é um assistente jurídico de pesquisa.
-
-## Pergunta do Advogado:
-{question}
-
-## Base de Conhecimento (RAG):
-{context}
-
-## Instruções:
-1. Responda a pergunta com base APENAS no conhecimento fornecido
-2. Cite as fontes (título do documento, artigo de lei)
-3. Se não houver informação suficiente, diga "Informação não encontrada na base"
-4. Seja objetivo e preciso
-
-## Formato de Resposta:
-**RESPOSTA:**
-[resposta objetiva]
-
-**FUNDAMENTO LEGAL:**
-[artigos, leis, precedentes citados]
-
-**FONTES CONSULTADAS:**
-- [Fonte 1]
-- [Fonte 2]
-
----
-Resposta:"""
-    
+    llm = get_llm(temperature=temperature, max_tokens=max_tokens)
     prompt = ChatPromptTemplate.from_template(template)
     
     def format_context(inputs: dict) -> dict:

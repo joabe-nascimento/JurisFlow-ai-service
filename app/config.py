@@ -6,13 +6,9 @@ class Settings(BaseSettings):
     host: str = "0.0.0.0"
     port: int = 8090
     
-    # LLM Provider (groq = grátis, openrouter = grátis/pago, azure = pago)
-    llm_provider: str = "groq"  # groq | openrouter | azure | openai
-    
-    # Groq (GRÁTIS - https://console.groq.com)
-    groq_api_key: str = ""
-    groq_model: str = "llama-3.3-70b-versatile"  # llama-3.3-70b-versatile, mixtral-8x7b
-    
+    # LLM Provider (openrouter = grátis/pago, azure = pago, openai = pago)
+    llm_provider: str = "openrouter"  # openrouter | azure | openai
+
     # Azure OpenAI (PAGO - para produção)
     azure_openai_key: str = ""
     azure_openai_endpoint: str = ""
@@ -47,6 +43,16 @@ class Settings(BaseSettings):
     
     # Java API Integration
     java_api_url: str = "http://localhost:8082/api"
+    
+    # Vertical (nicho/domínio) — define qual configuração carregar
+    ai_vertical: str = "legal"  # legal | medical | financial | etc
+
+    # CORS — lista separada por vírgula de origens permitidas
+    cors_allowed_origins: str = "http://localhost:3000,http://localhost:8082"
+
+    # Rate limiting (em memória, por IP — ver app/middleware/rate_limit.py)
+    rate_limit_enabled: bool = True
+    rate_limit_per_minute: int = 60
 
     class Config:
         env_file = ".env"

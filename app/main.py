@@ -6,20 +6,31 @@ from app.chains.bruna_assistant import bruna_chat
 from app.orchestration.bruna_orchestrator import bruna_orchestrator
 from app.chains.contract_analysis import analyze_contract
 from app.chains.document_generation import generate_document
+from app.chains.document_summary import summarize_document
+from app.chains.jurisprudence_analysis import analyze_jurisprudence
+from app.chains.case_prediction import predict_case_outcome
 from app.chains.legal_research import research
 from app.config import settings
 from app.llm.errors import LLMRateLimitError
 from app.llm.provider import get_provider_info
+from app.middleware.rate_limit import RateLimitMiddleware
+from app.verticals.loader import get_current_vertical, list_available_verticals
 from app.models import (
     AgentRequest,
     AgentResponse,
     BrunaChatRequest,
     BrunaChatResponse,
+    CaseOutcomeRequest,
+    CaseOutcomeResponse,
     ContractAnalysisRequest,
     ContractAnalysisResponse,
     DocumentCreate,
     DocumentGenerationRequest,
     DocumentGenerationResponse,
+    DocumentSummaryRequest,
+    DocumentSummaryResponse,
+    JurisprudenceAnalysisRequest,
+    JurisprudenceAnalysisResponse,
     KnowledgeDocument,
     LegalResearchRequest,
     LegalResearchResponse,
@@ -39,13 +50,25 @@ app = FastAPI(
     version="2.0.0",
 )
 
+_cors_origins = [
+    origin.strip()
+    for origin in settings.cors_allowed_origins.split(",")
+    if origin.strip()
+]
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=_cors_origins or ["http://localhost:3000"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+if settings.rate_limit_enabled:
+    app.add_middleware(
+        RateLimitMiddleware,
+        requests_per_minute=settings.rate_limit_per_minute,
+    )
 
 
 # ==================== HEALTH & STATUS ====================
@@ -57,7 +80,8 @@ def health():
 
 @app.get("/v1/status", response_model=StackStatus)
 def stack_status():
-    """Status do serviço com info de LLM e RAG."""
+    """Status do serviço com info de LLM, RAG e vertical."""
+    vertical = get_current_vertical()
     
     # Usa o store configurado
     if settings.retrieval_method == "langchain":
@@ -74,13 +98,15 @@ def stack_status():
         f"RAG ({settings.retrieval_method})",
         "FAISS Vector Store",
         "Embeddings locais",
-        "Chains (análise, pesquisa, geração)",
-        "Agents com Tools",
+        f"Vertical: {vertical.name} ({vertical.domain})",
+        f"Assistente: {vertical.assistant_name}",
+        f"Chains: {len(vertical.chains)}",
+        f"Agents: {'enabled' if vertical.agent_enabled else 'disabled'}",
         f"LLM: {llm_info['provider']}",
     ]
     
     return StackStatus(
-        service="JurisFlow AI + LangChain",
+        service=f"{vertical.name} AI Platform",
         version="2.0.0",
         status="online",
         retrieval=settings.retrieval_method,
@@ -92,6 +118,21 @@ def stack_status():
         llm_model=llm_info["model"],
         llm_cost=llm_info["cost"],
     )
+
+
+@app.get("/v1/verticals")
+def get_verticals():
+    """Lista verticais disponíveis."""
+    available = list_available_verticals()
+    current = get_current_vertical()
+    
+    return {
+        "current_vertical": settings.ai_vertical,
+        "current_name": current.name,
+        "current_domain": current.domain,
+        "available_verticals": available,
+        "info": "Configure AI_VERTICAL no .env para alterar o vertical ativo"
+    }
 
 
 
@@ -190,6 +231,57 @@ async def chain_document_generation(body: DocumentGenerationRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na geração: {str(e)}")
+
+
+@app.post("/v1/chains/summarize", response_model=DocumentSummaryResponse)
+async def chain_document_summary(body: DocumentSummaryRequest):
+    """
+    Chain: Resumo de Documentos/Peças Processuais.
+    """
+    try:
+        summary = await summarize_document(body.escritorio_id, body.text)
+        return DocumentSummaryResponse(summary=summary, escritorio_id=body.escritorio_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro no resumo: {str(e)}")
+
+
+@app.post("/v1/chains/jurisprudence", response_model=JurisprudenceAnalysisResponse)
+async def chain_jurisprudence_analysis(body: JurisprudenceAnalysisRequest):
+    """
+    Chain: Análise de Jurisprudência com RAG.
+    Teses favoráveis/contrárias, súmulas e estratégia.
+    """
+    try:
+        analysis = await analyze_jurisprudence(body.escritorio_id, body.tema, body.area_juridica)
+        return JurisprudenceAnalysisResponse(
+            analysis=analysis, tema=body.tema, escritorio_id=body.escritorio_id
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na análise: {str(e)}")
+
+
+@app.post("/v1/chains/predict-outcome", response_model=CaseOutcomeResponse)
+async def chain_predict_outcome(body: CaseOutcomeRequest):
+    """
+    Chain: Análise Preditiva de Resultado de Processo.
+    """
+    try:
+        analysis = await predict_case_outcome(
+            body.escritorio_id,
+            {
+                "area_direito": body.area_direito,
+                "tipo_acao": body.tipo_acao,
+                "tribunal": body.tribunal,
+                "vara": body.vara,
+                "resumo": body.resumo,
+                "argumentos_autor": body.argumentos_autor,
+                "argumentos_reu": body.argumentos_reu,
+                "provas": body.provas,
+            },
+        )
+        return CaseOutcomeResponse(analysis=analysis, escritorio_id=body.escritorio_id)
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na previsão: {str(e)}")
 
 
 # ==================== BRUNA ASSISTANT ====================

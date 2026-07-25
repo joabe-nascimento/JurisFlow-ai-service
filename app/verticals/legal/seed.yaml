@@ -1,0 +1,178 @@
+# ════════════════════════════════════════════════════════════════════════════
+# LEGAL VERTICAL - RAG SEED DATA
+# ════════════════════════════════════════════════════════════════════════════
+# Base de conhecimento inicial para o vertical jurídico
+
+documents:
+  - title: "Prazos Processuais - CPC"
+    category: "Legislação"
+    source: "CPC/2015"
+    content: |
+      ## Prazos Processuais Fundamentais (CPC/2015)
+      
+      **Contestação (Art. 335)**: 15 dias úteis contados da audiência de conciliação/mediação ou da citação (se não houver audiência).
+      - Litisconsórcio com advogados diferentes: prazo em dobro (Art. 229).
+      - Ministério Público ou Defensoria Pública: prazo em dobro (Art. 180 e 186).
+      
+      **Apelação (Art. 1003)**: 15 dias úteis da intimação da sentença.
+      
+      **Embargos de Declaração (Art. 1023)**: 5 dias úteis da intimação da decisão.
+      
+      **Agravo de Instrumento (Art. 1003, §5º)**: 15 dias úteis da intimação da decisão recorrida.
+      
+      **Recurso Especial/Extraordinário (Art. 1003, §5º)**: 15 dias úteis da intimação do acórdão.
+      
+      **Resposta à Reconvenção (Art. 343, §6º)**: 15 dias úteis da intimação da reconvenção.
+      
+      **Impugnação ao Cumprimento de Sentença (Art. 525)**: 15 dias úteis da intimação da penhora.
+      
+      **Embargos à Execução (Art. 914)**: 15 dias úteis da juntada do mandado de citação.
+      
+      **Contrarrazões de Recurso (Art. 1010, §1º)**: 15 dias úteis da intimação da subida do recurso.
+      
+      OBSERVAÇÃO IMPORTANTE: Prazos processuais são contados em DIAS ÚTEIS, excluindo-se o dia do começo e incluindo-se o do vencimento (Art. 219 CPC). Feriados e suspensões do expediente forense interrompem a contagem.
+  
+  - title: "LGPD - Lei Geral de Proteção de Dados"
+    category: "Legislação"
+    source: "Lei 13.709/2018"
+    content: |
+      ## Lei nº 13.709/2018 - LGPD
+      
+      A Lei Geral de Proteção de Dados Pessoais (LGPD) regula o tratamento de dados pessoais no Brasil.
+      
+      **Conceitos Fundamentais:**
+      - **Dado pessoal**: Informação relacionada a pessoa natural identificada ou identificável.
+      - **Titular**: Pessoa natural a quem se referem os dados pessoais.
+      - **Controlador**: Quem decide sobre o tratamento de dados pessoais.
+      - **Operador**: Quem realiza o tratamento de dados em nome do controlador.
+      
+      **Bases Legais para Tratamento (Art. 7º):**
+      1. Consentimento do titular
+      2. Cumprimento de obrigação legal
+      3. Execução de políticas públicas
+      4. Realização de estudos por órgão de pesquisa
+      5. Execução de contrato
+      6. Exercício regular de direitos
+      7. Proteção da vida
+      8. Tutela da saúde
+      9. Legítimo interesse
+      10. Proteção do crédito
+      
+      **Direitos dos Titulares (Art. 18):**
+      - Confirmação da existência de tratamento
+      - Acesso aos dados
+      - Correção de dados incompletos, inexatos ou desatualizados
+      - Anonimização, bloqueio ou eliminação
+      - Portabilidade
+      - Eliminação dos dados tratados com consentimento
+      - Informação sobre compartilhamento
+      - Revogação do consentimento
+      
+      **Penalidades (Art. 52):**
+      - Advertência
+      - Multa simples (até 2% do faturamento, limitada a R$ 50 milhões por infração)
+      - Multa diária
+      - Publicização da infração
+      - Bloqueio ou eliminação dos dados
+      - Suspensão parcial ou proibição total das atividades
+      
+      **Autoridade Nacional (ANPD):**
+      A Autoridade Nacional de Proteção de Dados é responsável por fiscalizar e aplicar sanções.
+  
+  - title: "Súmulas STF Mais Relevantes"
+    category: "Jurisprudência"
+    source: "STF"
+    content: |
+      ## Súmulas Vinculantes do STF (Seleção)
+      
+      **Súmula Vinculante 4**: Salvo nos casos previstos na Constituição, o salário mínimo não pode ser usado como indexador de base de cálculo de vantagem de servidor público ou de empregado, nem ser substituído por decisão judicial.
+      
+      **Súmula Vinculante 11**: Só é lícito o uso de algemas em casos de resistência e de fundado receio de fuga ou de perigo à integridade física própria ou alheia, por parte do preso ou de terceiros, justificada a excepcionalidade por escrito, sob pena de responsabilidade disciplinar, civil e penal do agente ou da autoridade e de nulidade da prisão ou do ato processual a que se refere, sem prejuízo da responsabilidade civil do Estado.
+      
+      **Súmula Vinculante 14**: É direito do defensor, no interesse do representado, ter acesso amplo aos elementos de prova que, já documentados em procedimento investigatório realizado por órgão com competência de polícia judiciária, digam respeito ao exercício do direito de defesa.
+      
+      **Súmula Vinculante 25**: É ilícita a prisão civil de depositário infiel, qualquer que seja a modalidade do depósito.
+      
+      **Súmula 331 TST**: A contratação de trabalhadores por empresa interposta é ilegal, formando-se o vínculo diretamente com o tomador dos serviços, salvo no caso de trabalho temporário (Lei nº 6.019/74). [...] O inadimplemento das obrigações trabalhistas, por parte do empregador, implica a responsabilidade subsidiária do tomador dos serviços quanto àquelas obrigações, desde que haja participado da relação processual e conste também do título executivo judicial.
+      
+      **Súmula 368 TST**: A Justiça do Trabalho é competente para processar e julgar as ações de indenização por danos morais e patrimoniais decorrentes de acidente de trabalho propostas por empregado contra empregador, inclusive aquelas que ainda não possuíam sentença de mérito em primeiro grau quando da promulgação da Emenda Constitucional nº 45/04.
+  
+  - title: "CLT - Direitos Trabalhistas Básicos"
+    category: "Legislação"
+    source: "CLT"
+    content: |
+      ## Consolidação das Leis do Trabalho - CLT
+      
+      **Jornada de Trabalho (Art. 58):**
+      - Duração normal: não superior a 8 horas diárias e 44 semanais
+      - Horas extras: remuneração mínima de 50% superior à hora normal
+      - Compensação: acordo escrito permite compensação de jornada
+      
+      **Férias (Art. 129 e seguintes):**
+      - Direito: 30 dias corridos após 12 meses de trabalho
+      - Remuneração: salário acrescido de 1/3 constitucional
+      - Fracionamento: pode ser dividida em até 3 períodos (um deles de no mínimo 14 dias)
+      - Abono: conversão de até 1/3 em pecúnia mediante acordo
+      
+      **13º Salário (Lei 4.090/62):**
+      - Gratificação correspondente a 1/12 da remuneração por mês trabalhado
+      - Pago em duas parcelas: 1ª até 30/11, 2ª até 20/12
+      
+      **FGTS (Lei 8.036/90):**
+      - Depósito mensal de 8% da remuneração
+      - Rescisão sem justa causa: multa de 40% sobre o saldo
+      
+      **Aviso Prévio (Art. 487):**
+      - Mínimo: 30 dias
+      - Acréscimo: 3 dias por ano de serviço, até máximo de 90 dias
+      - Trabalhado ou indenizado
+      
+      **Estabilidade Gestante (Art. 10, II, ADCT):**
+      - Confirmação da gravidez até 5 meses após o parto
+      - Vedada dispensa arbitrária ou sem justa causa
+      
+      **Salário Mínimo (Art. 76):**
+      - Fixado por lei e revisado periodicamente
+      - Valor nacional unificado
+  
+  - title: "Código Civil - Contratos"
+    category: "Legislação"
+    source: "Lei 10.406/2002"
+    content: |
+      ## Lei nº 10.406/2002 - Código Civil Brasileiro
+      ### Parte Especial - Livro I - Direito das Obrigações - Título V - Dos Contratos
+      
+      **Princípios Contratuais Fundamentais:**
+      1. **Autonomia da Vontade**: Liberdade de contratar (Art. 421)
+      2. **Boa-fé Objetiva**: Deveres anexos de lealdade, cooperação e informação (Art. 422)
+      3. **Função Social do Contrato**: Limites ao exercício da liberdade contratual (Art. 421)
+      4. **Equivalência das Prestações**: Equilíbrio entre direitos e obrigações (Art. 317)
+      
+      **Requisitos de Validade (Art. 104):**
+      - Agente capaz
+      - Objeto lícito, possível, determinado ou determinável
+      - Forma prescrita ou não defesa em lei
+      
+      **Vícios do Consentimento (Art. 138 e seguintes):**
+      - Erro ou ignorância
+      - Dolo
+      - Coação
+      - Estado de perigo
+      - Lesão
+      - Fraude contra credores
+      
+      **Revisão Contratual (Art. 317 e 478):**
+      - Onerosidade excessiva: quando prestação se torna extremamente onerosa por acontecimentos extraordinários e imprevisíveis
+      - Teoria da Imprevisão: *rebus sic stantibus*
+      - Resolução ou revisão judicial possível
+      
+      **Resolução Contratual (Art. 475):**
+      - Inadimplemento de uma das partes
+      - Direito à resolução com perdas e danos
+      - Cláusula resolutiva expressa ou tácita
+      
+      **Cláusulas Especiais:**
+      - **Arras ou Sinal (Art. 417)**: Garantia e prova de contrato
+      - **Cláusula Penal (Art. 408)**: Prefixação de perdas e danos
+      - **Evicção (Art. 447)**: Responsabilidade por perda da coisa alienada
+      - **Vícios Redibitórios (Art. 441)**: Defeitos ocultos que diminuem valor ou impedem uso

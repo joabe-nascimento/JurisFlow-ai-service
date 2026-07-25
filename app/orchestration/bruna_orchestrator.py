@@ -6,7 +6,7 @@ from app.chains.bruna_assistant import bruna_chat
 from app.llm.errors import LLMRateLimitError
 from app.orchestration.router import route_query
 from app.agents.legal_assistant import run_agent as run_legal_agent
-from app.tools.java_api import java_api_tools
+from app.tools.integration_api import integration_tools
 from app.agents.tools import legal_tools
 
 
@@ -33,7 +33,7 @@ async def bruna_orchestrator(
     }
 
     if strategy == "agent":
-        all_tools = legal_tools + java_api_tools
+        all_tools = legal_tools + integration_tools
 
         result = await run_legal_agent(
             question=message,

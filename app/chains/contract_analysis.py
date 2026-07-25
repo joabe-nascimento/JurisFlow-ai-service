@@ -1,4 +1,4 @@
-"""Chain para análise de contratos com RAG."""
+"""Chain para análise de contratos com RAG (configurável por vertical)."""
 
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
@@ -6,6 +6,7 @@ from langchain_core.runnables import RunnablePassthrough
 
 from app.llm.provider import get_llm
 from app.rag.langchain_store import langchain_rag_store
+from app.verticals.loader import get_current_vertical
 
 
 def create_contract_analysis_chain(escritorio_id: str):
@@ -17,50 +18,19 @@ def create_contract_analysis_chain(escritorio_id: str):
     2. Envia contexto + contrato para o LLM
     3. Retorna análise estruturada
     """
+    vertical = get_current_vertical()
+    prompt_config = vertical.load_prompt("contract_analysis")
     
-    llm = get_llm(temperature=0.0)
+    temperature = prompt_config.get("temperature", 0.1)
+    max_tokens = prompt_config.get("max_tokens", 2000)
+    template = prompt_config["system_prompt"]
     
-    template = """Você é um advogado especialista em análise de contratos.
-
-Sua tarefa: analisar o contrato fornecido e identificar cláusulas de risco com base no conhecimento jurídico disponível.
-
-## Conhecimento Jurídico (RAG):
-{context}
-
-## Contrato para Análise:
-{contract}
-
-## Instruções:
-1. Identifique cláusulas de risco (limitação de responsabilidade, multas, foro, cessão de IP, rescisão)
-2. Classifique cada risco como: ALTO | MÉDIO | BAIXO
-3. Sugira ajustes para mitigar riscos
-4. Cite artigos de lei quando aplicável
-
-## Formato de Resposta:
-**RESUMO EXECUTIVO:**
-[resumo em 2-3 linhas]
-
-**CLÁUSULAS DE RISCO IDENTIFICADAS:**
-
-1. [Título da Cláusula] - Risco: [ALTO/MÉDIO/BAIXO]
-   - Texto: "[trecho da cláusula]"
-   - Problema: [explicação do risco]
-   - Sugestão: [como ajustar]
-   - Fundamento: [artigo de lei, se aplicável]
-
-[repetir para cada risco]
-
-**RECOMENDAÇÕES FINAIS:**
-[orientações gerais]
-
----
-Resposta:"""
-    
+    llm = get_llm(temperature=temperature, max_tokens=max_tokens)
     prompt = ChatPromptTemplate.from_template(template)
     
     # Retriever do RAG
     def get_context(inputs: dict) -> str:
-        query = f"cláusulas de risco contratos {inputs.get('contract', '')[:200]}"
+        query = f"cláusulas de risco contratos {inputs.get('contract_text', '')[:200]}"
         result = langchain_rag_store.search(escritorio_id, query, limit=3)
         if not result.chunks:
             return "Nenhum conhecimento específico encontrado."
@@ -80,5 +50,5 @@ Resposta:"""
 async def analyze_contract(escritorio_id: str, contract_text: str) -> str:
     """Analisa um contrato e retorna relatório de riscos."""
     chain = create_contract_analysis_chain(escritorio_id)
-    result = await chain.ainvoke({"contract": contract_text})
+    result = await chain.ainvoke({"contract_text": contract_text})
     return result

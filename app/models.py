@@ -115,6 +115,45 @@ class DocumentGenerationResponse(BaseModel):
     escritorio_id: str
 
 
+class DocumentSummaryRequest(BaseModel):
+    text: str = Field(..., description="Texto do documento a ser resumido")
+    escritorio_id: str = Field(default="default")
+
+
+class DocumentSummaryResponse(BaseModel):
+    summary: str
+    escritorio_id: str
+
+
+class JurisprudenceAnalysisRequest(BaseModel):
+    tema: str = Field(..., description="Tema jurídico a analisar")
+    area_juridica: str = Field(default="Geral", description="Área do direito")
+    escritorio_id: str = Field(default="default")
+
+
+class JurisprudenceAnalysisResponse(BaseModel):
+    analysis: str
+    tema: str
+    escritorio_id: str
+
+
+class CaseOutcomeRequest(BaseModel):
+    area_direito: str = Field(default="")
+    tipo_acao: str = Field(default="")
+    tribunal: str = Field(default="")
+    vara: str = Field(default="")
+    resumo: str = Field(default="")
+    argumentos_autor: str = Field(default="")
+    argumentos_reu: str = Field(default="")
+    provas: str = Field(default="")
+    escritorio_id: str = Field(default="default")
+
+
+class CaseOutcomeResponse(BaseModel):
+    analysis: str
+    escritorio_id: str
+
+
 class AgentRequest(BaseModel):
     question: str = Field(..., description="Pergunta para o agente")
     escritorio_id: str = Field(default="default")

@@ -10,11 +10,11 @@ python -m venv .venv
 pip install -r requirements.txt
 ```
 
-### 2. Obter API Key GRATUITA do Groq
-1. Acesse: https://console.groq.com/keys
+### 2. Obter API Key GRATUITA do OpenRouter
+1. Acesse: https://openrouter.ai/keys
 2. Crie uma conta (grátis)
-3. Clique em "Create API Key"
-4. Copie a chave (começa com `gsk_`)
+3. Clique em "Create Key"
+4. Copie a chave (começa com `sk-or-v1-`)
 
 ### 3. Configurar `.env`
 ```bash
@@ -22,8 +22,8 @@ pip install -r requirements.txt
 cp .env.example .env
 
 # Edite .env e adicione sua chave
-LLM_PROVIDER=groq
-GROQ_API_KEY=gsk_sua_chave_aqui
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=sk-or-v1-sua_chave_aqui
 RETRIEVAL_METHOD=langchain
 ```
 
@@ -100,9 +100,9 @@ Resposta:
   "version": "2.0.0",
   "status": "online",
   "retrieval": "langchain",
-  "llm_provider": "groq",
-  "llm_model": "llama-3.3-70b-versatile",
-  "llm_cost": "GRÁTIS",
+  "llm_provider": "openrouter",
+  "llm_model": "openrouter/free",
+  "llm_cost": "Grátis (modelos :free) ou pago",
   "capabilities": [
     "FastAPI",
     "LangChain",
@@ -111,7 +111,7 @@ Resposta:
     "Embeddings locais",
     "Chains (análise, pesquisa, geração)",
     "Agents com Tools",
-    "LLM: groq"
+    "LLM: openrouter"
   ],
   "escritorios_indexed": 1,
   "total_documents": 6,
@@ -124,8 +124,8 @@ Resposta:
 ## 🔥 Dicas
 
 ### LLM grátis vs pago
-- **Groq (grátis)**: Bom para desenvolvimento. Rate limits generosos.
-- **Azure OpenAI (pago)**: Para produção. Melhor qualidade e SLA.
+- **OpenRouter (grátis, modelos :free)**: Bom para desenvolvimento. Limite de ~50 req/dia por conta.
+- **Azure OpenAI (pago)**: Para produção. Melhor qualidade e SLA. Também funciona como fallback automático se o OpenRouter atingir o limite.
 
 ### Performance
 - Primeira requisição é lenta (carrega embeddings model)
@@ -152,8 +152,8 @@ Resposta:
 
 ## 🐛 Troubleshooting
 
-### Erro: "groq_api_key não configurada"
-- Certifique-se que o `.env` existe e tem `GROQ_API_KEY=gsk_...`
+### Erro: "openrouter_api_key não configurada"
+- Certifique-se que o `.env` existe e tem `OPENROUTER_API_KEY=sk-or-v1-...`
 - Reinicie o servidor após editar `.env`
 
 ### Erro ao importar FAISS
@@ -201,7 +201,7 @@ pip install faiss-cpu --force-reinstall
 ## 📚 Aprender Mais
 
 - **LangChain Docs**: https://python.langchain.com/
-- **Groq**: https://console.groq.com/docs
+- **OpenRouter**: https://openrouter.ai/docs
 - **RAG Tutorial**: https://python.langchain.com/docs/use_cases/question_answering/
 - **Agents**: https://python.langchain.com/docs/modules/agents/
 

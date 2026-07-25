@@ -1,0 +1,81 @@
+# ════════════════════════════════════════════════════════════════════════════
+# LEGAL VERTICAL - ROUTER CONFIGURATION
+# ════════════════════════════════════════════════════════════════════════════
+# Padrões de detecção de intenção para roteamento inteligente
+
+intents:
+  - intent: "buscar_processo"
+    keywords:
+      - "processo"
+      - "nº"
+      - "numero"
+    regex_patterns:
+      - '\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}'  # Número de processo CNJ
+    use_agent: true
+    use_rag: false
+    explanation: "Detectado número de processo - usando agent com tool buscar_processo"
+  
+  - intent: "verificar_prazo"
+    keywords:
+      - "prazo"
+      - "vencimento"
+      - "vence"
+      - "quando vence"
+    conditions:
+      - has_processo_mention: true  # Se menciona processo específico
+    use_agent: true
+    use_rag: true
+    explanation: "Pergunta sobre prazo com possível referência a processo - usando agent"
+  
+  - intent: "prazo_generico"
+    keywords:
+      - "prazo"
+      - "vencimento"
+    conditions:
+      - has_processo_mention: false  # Prazo genérico
+    use_agent: false
+    use_rag: true
+    explanation: "Pergunta sobre prazo genérico - usando RAG + LLM direto"
+  
+  - intent: "buscar_cliente"
+    keywords:
+      - "cliente"
+      - "contato"
+      - "telefone do cliente"
+    use_agent: true
+    use_rag: false
+    explanation: "Busca de cliente - usando agent com tool buscar_cliente"
+  
+  - intent: "calcular_prazo"
+    keywords:
+      - "calcular prazo"
+      - "contar"
+      - "a partir de"
+    conditions:
+      - has_date: true  # Tem data na mensagem
+    use_agent: true
+    use_rag: true
+    explanation: "Cálculo de prazo com data - usando agent com tool calcular_prazo"
+  
+  - intent: "pesquisa_juridica"
+    keywords:
+      - "artigo"
+      - "art."
+      - "lei"
+      - "código"
+      - "cpc"
+      - "clt"
+      - "lgpd"
+      - "jurisprudência"
+      - "súmula"
+      - "stf"
+      - "stj"
+    use_agent: false
+    use_rag: true
+    explanation: "Pesquisa jurídica - usando RAG + LLM"
+  
+  - intent: "conversacional"
+    default: true
+    use_agent: false
+    use_rag: true
+    explanation: "Conversa geral - usando RAG + LLM"

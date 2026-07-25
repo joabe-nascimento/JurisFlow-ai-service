@@ -15,74 +15,6 @@ from langchain_core.documents import Document as LangChainDocument
 from app.config import settings
 from app.models import DocumentCreate, KnowledgeDocument, ScoredChunk, SearchResult
 
-# Dados iniciais (seed)
-DEFAULT_KNOWLEDGE: List[dict] = [
-    {
-        "title": "Código de Processo Civil - Prazos",
-        "category": "Processual",
-        "source": "CPC/2015",
-        "content": (
-            "Contestação: 15 dias úteis (art. 335 CPC). Apelação: 15 dias. "
-            "Embargos de declaração: 5 dias. Agravo de instrumento: 15 dias. "
-            "Recursos especial e extraordinário: 15 dias. "
-            "Impugnação ao cumprimento: 15 dias."
-        ),
-    },
-    {
-        "title": "Direito do Trabalho - Reclamação Trabalhista",
-        "category": "Trabalhista",
-        "source": "CLT + TST",
-        "content": (
-            "Reclamação trabalhista: prescrição 2 anos durante contrato, 5 após extinção. "
-            "Competência: Vara do Trabalho. Honorários: 5% a 15%. "
-            "Horas extras: 50% dias úteis, 100% domingos/feriados."
-        ),
-    },
-    {
-        "title": "LGPD - Obrigações para Escritórios",
-        "category": "Compliance",
-        "source": "LGPD Lei 13.709/2018",
-        "content": (
-            "Política de privacidade, consentimento, segurança, registro de operações "
-            "e canal do titular. Dados sensíveis exigem base legal específica. "
-            "Controlador e operador têm responsabilidades distintas. "
-            "ANPD fiscaliza e pode aplicar multas."
-        ),
-    },
-    {
-        "title": "RAG com LangChain — Arquitetura",
-        "category": "Inteligência Artificial",
-        "source": "JurisFlow AI",
-        "content": (
-            "Stack: Next.js → Spring Boot → FastAPI + LangChain. "
-            "RAG: chunking → embeddings (sentence-transformers local) → "
-            "FAISS (vector store) → retrieval → rerank → LLM (Groq grátis). "
-            "Agents: ReAct pattern com tools (cálculo prazos, busca tribunal). "
-            "Chains: análise contrato, pesquisa jurídica, geração de peças."
-        ),
-    },
-    {
-        "title": "Contratos - Cláusulas de Risco",
-        "category": "Contratos",
-        "source": "Prática advocatícia",
-        "content": (
-            "Riscos: limitação de responsabilidade desigual, multas desproporcionais, "
-            "foro exclusivo prejudicial, cessão de IP irrestrita, rescisão sem aviso, "
-            "garantias excessivas, renovação automática, sigilo perpétuo."
-        ),
-    },
-    {
-        "title": "Honorários Advocatícios — Tabela OAB",
-        "category": "Gestão",
-        "source": "OAB",
-        "content": (
-            "Consultoria: 10-20 URH. Contratos: 15-30 URH. "
-            "Ação cível: 50-100 URH. Trabalhista: 20-50 URH. "
-            "Êxito: 10-30% do valor obtido. URH varia por seccional."
-        ),
-    },
-]
-
 
 class LangChainRAGStore:
     """
@@ -236,12 +168,17 @@ class LangChainRAGStore:
         )
     
     def seed_defaults(self, escritorio_id: str) -> int:
-        """Popula knowledge base inicial."""
+        """Popula knowledge base inicial do vertical configurado."""
+        from app.verticals.loader import get_current_vertical
+        
         self._ensure_escritorio(escritorio_id)
         if self._documents[escritorio_id]:
             return 0
         
-        for item in DEFAULT_KNOWLEDGE:
+        vertical = get_current_vertical()
+        seed_docs = vertical.seed_documents
+        
+        for item in seed_docs:
             self.add_document(
                 escritorio_id,
                 DocumentCreate(
@@ -252,7 +189,7 @@ class LangChainRAGStore:
                 ),
             )
         
-        return len(DEFAULT_KNOWLEDGE)
+        return len(seed_docs)
     
     def get_vector_store(self, escritorio_id: str) -> Optional[FAISS]:
         """Retorna vector store para uso em chains."""

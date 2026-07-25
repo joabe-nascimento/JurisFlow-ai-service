@@ -1,21 +1,39 @@
-"""Tools que interagem com a API Java do JurisFlow."""
+"""
+Tools que interagem com a API de integração (backend do produto).
+
+Cada vertical pode ter sua própria API de backend configurada em
+app/verticals/{vertical}/config.yaml na seção 'integration'.
+"""
 
 from typing import Optional, Dict, Any
 import httpx
 from langchain_core.tools import tool
 
-from app.config import settings
+
+def get_integration_api_url() -> str:
+    """Retorna a URL da API de integração do vertical atual."""
+    from app.verticals.loader import get_current_vertical
+    return get_current_vertical().integration_api_url
 
 
-# URL base da API Java (configurável)
-JAVA_API_URL = settings.java_api_url if hasattr(settings, 'java_api_url') else "http://localhost:8082/api"
+def get_integration_timeout() -> float:
+    """Retorna o timeout configurado para a API de integração."""
+    from app.verticals.loader import get_current_vertical
+    return get_current_vertical().integration_timeout
 
 
-async def call_java_api(endpoint: str, method: str = "GET", data: Optional[Dict] = None) -> Dict[str, Any]:
-    """Helper para chamar API Java."""
+async def call_integration_api(endpoint: str, method: str = "GET", data: Optional[Dict] = None) -> Dict[str, Any]:
+    """
+    Helper para chamar a API de integração do produto.
+    
+    A URL base é carregada dinamicamente do vertical configurado.
+    """
     try:
-        async with httpx.AsyncClient(timeout=10.0) as client:
-            url = f"{JAVA_API_URL}{endpoint}"
+        api_url = get_integration_api_url()
+        timeout = get_integration_timeout()
+        
+        async with httpx.AsyncClient(timeout=timeout) as client:
+            url = f"{api_url}{endpoint}"
             if method == "GET":
                 response = await client.get(url)
             elif method == "POST":
@@ -28,17 +46,17 @@ async def call_java_api(endpoint: str, method: str = "GET", data: Optional[Dict]
             else:
                 return {"error": f"Status {response.status_code}: {response.text}"}
     except Exception as e:
-        return {"error": f"Erro ao chamar API: {str(e)}"}
+        return {"error": f"Erro ao chamar API de integração: {str(e)}"}
 
 
 @tool
 async def buscar_processo(numero_processo: str, escritorio_id: str = "default") -> str:
     """
-    Busca informações de um processo no sistema JurisFlow.
+    Busca informações de um processo no sistema.
     
     Args:
         numero_processo: Número do processo (formato: 0000000-00.0000.0.00.0000)
-        escritorio_id: ID do escritório (opcional)
+        escritorio_id: ID do escritório/tenant (opcional)
     
     Returns:
         Informações do processo ou mensagem de erro
@@ -46,7 +64,7 @@ async def buscar_processo(numero_processo: str, escritorio_id: str = "default") 
     Exemplo:
         buscar_processo("0001234-56.2024.8.26.0100")
     """
-    result = await call_java_api(f"/v1/processos/search?numero={numero_processo}")
+    result = await call_integration_api(f"/v1/processos/search?numero={numero_processo}")
     
     if "error" in result:
         return f"Não foi possível buscar o processo: {result['error']}"
@@ -76,7 +94,7 @@ async def listar_prazos_proximos(dias: int = 7, escritorio_id: str = "default") 
     
     Args:
         dias: Número de dias à frente para buscar (padrão: 7)
-        escritorio_id: ID do escritório (opcional)
+        escritorio_id: ID do escritório/tenant (opcional)
     
     Returns:
         Lista de prazos vencendo ou mensagem se não houver
@@ -84,7 +102,7 @@ async def listar_prazos_proximos(dias: int = 7, escritorio_id: str = "default") 
     Exemplo:
         listar_prazos_proximos(15)
     """
-    result = await call_java_api(f"/v1/prazos/proximos?dias={dias}")
+    result = await call_integration_api(f"/v1/prazos/proximos?dias={dias}")
     
     if "error" in result:
         return f"Não foi possível buscar prazos: {result['error']}"
@@ -110,11 +128,11 @@ async def listar_prazos_proximos(dias: int = 7, escritorio_id: str = "default") 
 @tool
 async def buscar_cliente(nome: str, escritorio_id: str = "default") -> str:
     """
-    Busca informações de um cliente no sistema JurisFlow.
+    Busca informações de um cliente no sistema.
     
     Args:
         nome: Nome ou parte do nome do cliente
-        escritorio_id: ID do escritório (opcional)
+        escritorio_id: ID do escritório/tenant (opcional)
     
     Returns:
         Informações do cliente ou mensagem de erro
@@ -122,7 +140,7 @@ async def buscar_cliente(nome: str, escritorio_id: str = "default") -> str:
     Exemplo:
         buscar_cliente("João Silva")
     """
-    result = await call_java_api(f"/v1/clientes/search?nome={nome}")
+    result = await call_integration_api(f"/v1/clientes/search?nome={nome}")
     
     if "error" in result:
         return f"Não foi possível buscar o cliente: {result['error']}"
@@ -166,7 +184,7 @@ async def verificar_prazo_processo(numero_processo: str) -> str:
     Exemplo:
         verificar_prazo_processo("0001234-56.2024.8.26.0100")
     """
-    result = await call_java_api(f"/v1/prazos/processo/{numero_processo}")
+    result = await call_integration_api(f"/v1/prazos/processo/{numero_processo}")
     
     if "error" in result:
         return f"Não foi possível verificar prazos: {result['error']}"
@@ -185,10 +203,14 @@ async def verificar_prazo_processo(numero_processo: str) -> str:
     return info
 
 
-# Lista de todas as tools para o agent
-java_api_tools = [
+# Lista de todas as tools de integração para o agent
+# (tools que interagem com a API de backend do produto)
+integration_tools = [
     buscar_processo,
     listar_prazos_proximos,
     buscar_cliente,
     verificar_prazo_processo,
 ]
+
+# Alias para backward compatibility
+java_api_tools = integration_tools
