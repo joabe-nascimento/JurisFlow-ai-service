@@ -9,6 +9,7 @@ from app.chains.contract_analysis import analyze_contract
 from app.chains.document_generation import generate_document
 from app.chains.document_summary import summarize_document
 from app.chains.jurisprudence_analysis import analyze_jurisprudence
+from app.chains.jurisprudence_search import search_jurisprudence
 from app.chains.case_prediction import predict_case_outcome
 from app.chains.legal_research import research
 from app.config import settings
@@ -32,6 +33,8 @@ from app.models import (
     DocumentSummaryResponse,
     JurisprudenceAnalysisRequest,
     JurisprudenceAnalysisResponse,
+    JurisprudenceSearchRequest,
+    JurisprudenceSearchResponse,
     KnowledgeDocument,
     LegalResearchRequest,
     LegalResearchResponse,
@@ -255,6 +258,31 @@ async def chain_jurisprudence_analysis(body: JurisprudenceAnalysisRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na análise: {str(e)}")
+
+
+@app.post("/v1/chains/jurisprudence-search", response_model=JurisprudenceSearchResponse)
+async def chain_jurisprudence_search(body: JurisprudenceSearchRequest):
+    """
+    Chain: Pesquisa Jurisprudencial Estruturada.
+    Retorna julgados/teses relevantes (tribunal, resumo, citação, relevância)
+    prontos para alimentar a biblioteca de jurisprudência do escritório.
+    """
+    try:
+        result = await search_jurisprudence(
+            body.escritorio_id,
+            body.tema,
+            body.tribunal,
+            body.periodo,
+            body.area_juridica,
+        )
+        return JurisprudenceSearchResponse(
+            resultados=result["resultados"],
+            disclaimer=result["disclaimer"],
+            tema=body.tema,
+            escritorio_id=body.escritorio_id,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na pesquisa: {str(e)}")
 
 
 @app.post("/v1/chains/predict-outcome", response_model=CaseOutcomeResponse)

@@ -137,6 +137,30 @@ class JurisprudenceAnalysisResponse(BaseModel):
     escritorio_id: str
 
 
+class JurisprudenceSearchRequest(BaseModel):
+    tema: str = Field(..., description="Tema, palavra-chave ou pergunta jurídica")
+    tribunal: str = Field(default="Todos", description="Tribunal alvo: STF, STJ, TST, TRT, TJ, Todos...")
+    periodo: str = Field(default="", description="Recorte temporal, ex.: 'últimos 3 anos'")
+    area_juridica: str = Field(default="Geral", description="Área do direito")
+    escritorio_id: str = Field(default="default")
+
+
+class JurisprudenceSearchItem(BaseModel):
+    tribunal: str
+    tema: str
+    resultado: Optional[str] = None
+    relevancia: str = "media"
+    referencia: Optional[str] = None
+    resumo: Optional[str] = None
+
+
+class JurisprudenceSearchResponse(BaseModel):
+    resultados: list[JurisprudenceSearchItem]
+    disclaimer: str
+    tema: str
+    escritorio_id: str
+
+
 class CaseOutcomeRequest(BaseModel):
     area_direito: str = Field(default="")
     tipo_acao: str = Field(default="")
