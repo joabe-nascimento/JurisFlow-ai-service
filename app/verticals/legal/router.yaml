@@ -6,9 +6,14 @@
 intents:
   - intent: "buscar_processo"
     keywords:
-      - "processo"
-      - "nº"
-      - "numero"
+      - "nº processo"
+      - "numero do processo"
+      - "número do processo"
+      - "processo nº"
+      - "processo numero"
+      - "processo número"
+      - "consultar processo"
+      - "buscar processo"
     regex_patterns:
       - '\d{7}-\d{2}\.\d{4}\.\d\.\d{2}\.\d{4}'  # Número de processo CNJ
     use_agent: true

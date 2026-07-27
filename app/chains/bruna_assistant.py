@@ -44,27 +44,40 @@ def _retrieve_context(escritorio_id: str, message: str, use_rag: bool) -> str:
     )
 
 
-def _format_time_context(time_context: dict | None) -> str:
-    """Formata o contexto temporal para o prompt."""
+def _format_time_context(time_context: dict | None, is_first_message: bool) -> str:
+    """Formata o contexto temporal para o prompt.
+
+    O cumprimento (bom dia/boa tarde/boa noite) só é sugerido na PRIMEIRA
+    mensagem da conversa. Nas respostas seguintes, apenas a data/hora fica
+    disponível como contexto, sem instrução de cumprimento — evita que a
+    Bruna repita "bom dia"/"boa noite" em toda resposta, o que soa robótico.
+    """
     if not time_context:
         return ""
     date = time_context.get("date", "")
     time = time_context.get("time", "")
     period = time_context.get("period", "")
-    
+
+    if not is_first_message:
+        return f"""═══════════════════════════════════════════════════════════
+CONTEXTO TEMPORAL (apenas referência, NÃO cumprimente novamente):
+Data: {date} · Horário: {time}
+═══════════════════════════════════════════════════════════"""
+
     greeting_map = {
+        "madrugada": "BOA NOITE",
         "manhã": "BOM DIA",
-        "tarde": "BOA TARDE", 
-        "noite": "BOA NOITE"
+        "tarde": "BOA TARDE",
+        "noite": "BOA NOITE",
     }
     correct_greeting = greeting_map.get(period, "OLÁ")
-    
+
     return f"""═══════════════════════════════════════════════════════════
-IMPORTANTE - CONTEXTO TEMPORAL ATUAL:
+IMPORTANTE - CONTEXTO TEMPORAL ATUAL (primeira mensagem da conversa):
 Data: {date}
 Horário: {time}
 Período: {period}
-CUMPRIMENTE COM: {correct_greeting} (não use outro cumprimento)
+Pode abrir com um cumprimento natural equivalente a "{correct_greeting}" — varie a forma, sem gritar em maiúsculas e sem repetir sempre a mesma frase.
 ═══════════════════════════════════════════════════════════"""
 
 
@@ -86,8 +99,12 @@ def _build_chain(llm):
     prompt = ChatPromptTemplate.from_template(template)
 
     def prepare(inputs: dict) -> dict:
+        history = inputs.get("history")
         return {
-            "time_context": _format_time_context(inputs.get("time_context")),
+            "time_context": _format_time_context(
+                inputs.get("time_context"),
+                is_first_message=not history,
+            ),
             "message": inputs["message"],
             "context": _retrieve_context(
                 inputs["escritorio_id"], inputs["message"], inputs["use_rag"]
@@ -170,10 +187,19 @@ async def bruna_chat(
         )
 
     # Todos os modelos falharam ou retornaram metadados inválidos
-    period = (time_context or {}).get("period", "dia")
-    greeting = {"manhã": "Bom dia", "tarde": "Boa tarde", "noite": "Boa noite"}.get(period, "Olá")
+    if not history:
+        period = (time_context or {}).get("period", "dia")
+        greeting = {
+            "madrugada": "Boa noite",
+            "manhã": "Bom dia",
+            "tarde": "Boa tarde",
+            "noite": "Boa noite",
+        }.get(period, "Olá")
+        abertura = f"{greeting}! Tudo bem por aqui."
+    else:
+        abertura = "Tudo bem por aqui."
+
     return (
-        f"{greeting}! Tudo bem por aqui. "
-        "No momento estou com instabilidade no provedor de IA, mas posso ajudar com "
+        f"{abertura} No momento estou com instabilidade no provedor de IA, mas posso ajudar com "
         "prazos, contratos, LGPD e a base do escritório. O que você precisa?"
     )
