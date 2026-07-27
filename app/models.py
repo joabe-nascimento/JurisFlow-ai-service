@@ -180,11 +180,19 @@ class ChatHistoryMessage(BaseModel):
     content: str
 
 
+class TimeContext(BaseModel):
+    """Contexto temporal para dar consciência de data/hora à IA."""
+    date: str = Field(..., description="Data formatada (ex: sexta-feira, 25 de julho de 2026)")
+    time: str = Field(..., description="Hora formatada (ex: 23:30)")
+    period: str = Field(..., description="Período do dia: manhã, tarde ou noite")
+
+
 class BrunaChatRequest(BaseModel):
     message: str = Field(..., description="Mensagem do usuário")
     escritorio_id: str = Field(default="default")
     use_rag: bool = Field(default=True)
     history: Optional[List[ChatHistoryMessage]] = None
+    time_context: Optional[TimeContext] = None
 
 
 class BrunaChatResponse(BaseModel):

@@ -300,12 +300,21 @@ async def bruna_chat_endpoint(body: BrunaChatRequest):
         if body.history:
             history = [{"role": m.role, "content": m.content} for m in body.history]
         
+        time_context = None
+        if body.time_context:
+            time_context = {
+                "date": body.time_context.date,
+                "time": body.time_context.time,
+                "period": body.time_context.period,
+            }
+        
         # Usa orchestrator em vez da chain simples
         answer, metadata = await bruna_orchestrator(
             escritorio_id=body.escritorio_id,
             message=body.message,
             use_rag=body.use_rag,
             history=history,
+            time_context=time_context,
         )
         
         return BrunaChatResponse(

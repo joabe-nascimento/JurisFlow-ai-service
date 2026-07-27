@@ -15,6 +15,7 @@ async def bruna_orchestrator(
     message: str,
     use_rag: bool = True,
     history: Optional[list] = None,
+    time_context: Optional[dict] = None,
 ) -> tuple[str, dict]:
     """
     Orchestrator da Bruna que decide a melhor estratégia.
@@ -51,6 +52,7 @@ async def bruna_orchestrator(
             message=message,
             use_rag=use_rag,
             history=history,
+            time_context=time_context,
         )
         metadata["tools_used"] = []
 

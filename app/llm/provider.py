@@ -8,6 +8,14 @@ from langchain_openai import AzureChatOpenAI, ChatOpenAI
 from app.config import settings
 
 
+def _azure_temperature(temperature: float) -> float:
+    """Modelos GPT-5 no Azure só aceitam temperature=1 (padrão)."""
+    deployment = settings.azure_deployment_name.lower()
+    if deployment.startswith("gpt-5") or deployment.startswith("o"):
+        return 1.0
+    return temperature
+
+
 def get_openrouter_model_list() -> list[str]:
     """Modelos OpenRouter em ordem de tentativa (router + fallbacks)."""
     models: list[str] = []
@@ -56,9 +64,9 @@ def get_llm_by_provider(
             azure_endpoint=settings.azure_openai_endpoint,
             api_key=settings.azure_openai_key,
             deployment_name=settings.azure_deployment_name,
-            temperature=temperature,
+            temperature=_azure_temperature(temperature),
             max_tokens=max_tokens or 4096,
-            api_version="2024-02-15-preview",
+            api_version="2024-12-01-preview",
         )
 
     if provider == "openai":
