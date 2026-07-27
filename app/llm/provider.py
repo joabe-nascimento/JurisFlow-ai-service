@@ -18,6 +18,15 @@ def _azure_temperature(temperature: float) -> float:
     return temperature
 
 
+def _azure_token_kwargs(max_tokens: Optional[int]) -> dict:
+    """GPT-5 no Azure usa max_completion_tokens em vez de max_tokens."""
+    tokens = max_tokens or 4096
+    deployment = settings.azure_deployment_name.lower()
+    if deployment.startswith("gpt-5") or deployment.startswith("o"):
+        return {"max_completion_tokens": tokens}
+    return {"max_tokens": tokens}
+
+
 def get_openrouter_model_list() -> list[str]:
     """Modelos OpenRouter em ordem de tentativa (router + fallbacks)."""
     models: list[str] = []
@@ -67,8 +76,8 @@ def get_llm_by_provider(
             api_key=settings.azure_openai_key,
             deployment_name=settings.azure_deployment_name,
             temperature=_azure_temperature(temperature),
-            max_tokens=max_tokens or 4096,
             api_version="2024-12-01-preview",
+            **_azure_token_kwargs(max_tokens),
         )
 
     if provider == "openai":

@@ -3,7 +3,7 @@
 set -eu
 
 APP_DIR="/home2/joabef36/jurisflow-ai"
-PORT=8090
+PORT=8091
 LOG_FILE="$APP_DIR/jurisflow.log"
 PID_FILE="$APP_DIR/jurisflow.pid"
 
