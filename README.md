@@ -48,6 +48,72 @@ Agente inteligente com acesso a tools especializadas:
 - `calcular_honorarios`: Calcula honorários conforme Tabela OAB
 
 ### 4️⃣ **LLMs (Language Models)**
+
+---
+
+## 🚀 Deploy em Produção
+
+### 📦 Opções de Deploy
+
+#### 1. **HostGator cPanel** (Shared Hosting)
+Deploy via workaround com Setup Python App + nohup + reverse proxy.
+
+📖 **[Ver guia completo: DEPLOY_HOSTGATOR.md](./DEPLOY_HOSTGATOR.md)**
+
+**Vantagens:**
+- ✅ Usa hospedagem que você já paga
+- ✅ Sem custos adicionais
+- ✅ Controle total via cPanel
+
+**Desvantagens:**
+- ⚠️ Configuração manual complexa
+- ⚠️ Sem auto-deploy
+- ⚠️ Processo pode cair após restart do servidor
+
+---
+
+#### 2. **Railway.app** (Recomendado)
+Deploy automático via Git com $5/mês de crédito grátis.
+
+📖 **[Ver guia completo: DEPLOY_RAILWAY.md](./DEPLOY_RAILWAY.md)**
+
+**Vantagens:**
+- ✅ Deploy em 5 minutos
+- ✅ Auto-deploy via Git
+- ✅ SSL/HTTPS automático
+- ✅ Logs em tempo real
+- ✅ Restart automático
+- ✅ $5/mês GRÁTIS (suficiente para hobby projects)
+
+**Desvantagens:**
+- ⚠️ Custo extra se exceder free tier (~$5-10/mês)
+
+---
+
+#### 3. **Render.com** (Alternativa)
+Similar ao Railway, com free tier (mas com sleep após 15min de inatividade).
+
+**Vantagens:**
+- ✅ Free tier permanente
+- ✅ Auto-deploy via Git
+
+**Desvantagens:**
+- ⚠️ Cold start de 30-60s após inatividade
+- ⚠️ Não ideal para produção crítica
+
+---
+
+### 🎯 Recomendação
+
+| Cenário | Recomendação |
+|---------|--------------|
+| **Produção séria** | Railway.app |
+| **Economia máxima** | HostGator cPanel |
+| **Teste/Staging** | Render.com (free tier) |
+
+---
+
+### 4️⃣ **LLMs (Language Models)**
 - **OpenRouter (GRÁTIS/PAGO)**: modelos `:free` — ideal para desenvolvimento
 - **Azure OpenAI (PAGO)**: GPT-4o — para produção (também usado como fallback automático)
 - **OpenAI (PAGO)**: GPT-4o-mini — alternativa
