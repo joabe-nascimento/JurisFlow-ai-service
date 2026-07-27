@@ -5,7 +5,7 @@ from typing import Optional
 
 from langchain_core.tools import tool
 
-from app.rag.langchain_store import langchain_rag_store
+from app.rag.factory import get_rag_store
 
 
 @tool
@@ -83,7 +83,8 @@ def buscar_conhecimento(query: str, escritorio_id: str = "default") -> str:
         - buscar_conhecimento("prazo apelação")
         - buscar_conhecimento("LGPD obrigações")
     """
-    result = langchain_rag_store.search(escritorio_id, query, limit=3)
+    store = get_rag_store()
+    result = store.search(escritorio_id, query, limit=3)
     
     if not result.chunks:
         return f"Nenhum conhecimento encontrado para: {query}"

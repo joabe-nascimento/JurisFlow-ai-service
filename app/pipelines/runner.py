@@ -3,8 +3,7 @@ from typing import List
 
 from app.config import settings
 from app.models import PipelineRunRequest, PipelineRunResult, PipelineStepResult
-from app.rag.langchain_store import langchain_rag_store
-from app.rag.store import rag_store
+from app.rag.factory import get_rag_store
 
 PIPELINES = {
     "rag-chat": {
@@ -46,7 +45,7 @@ def run_pipeline(request: PipelineRunRequest) -> PipelineRunResult:
         start = time.perf_counter()
         
         # Usa o store configurado (LangChain FAISS ou TF-IDF)
-        store = langchain_rag_store if settings.retrieval_method == "langchain" else rag_store
+        store = get_rag_store()
         search = store.search(request.escritorio_id, request.input, 4)
         
         # Build context

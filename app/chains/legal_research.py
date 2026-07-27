@@ -4,7 +4,7 @@ from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 
 from app.llm.provider import get_llm
-from app.rag.langchain_store import langchain_rag_store
+from app.rag.factory import get_rag_store
 from app.verticals.loader import get_current_vertical
 
 
@@ -29,7 +29,8 @@ def create_legal_research_chain(escritorio_id: str):
     
     def format_context(inputs: dict) -> dict:
         question = inputs["question"]
-        result = langchain_rag_store.search(escritorio_id, question, limit=5)
+        store = get_rag_store()
+        result = store.search(escritorio_id, question, limit=5)
         
         if not result.chunks:
             context = "Nenhum documento relevante encontrado na base de conhecimento."

@@ -1,7 +1,6 @@
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.agents.legal_assistant import run_agent
 from app.chains.bruna_assistant import bruna_chat
 from app.orchestration.bruna_orchestrator import bruna_orchestrator
 from app.chains.contract_analysis import analyze_contract
@@ -41,8 +40,7 @@ from app.models import (
     StackStatus,
 )
 from app.pipelines.runner import run_pipeline
-from app.rag.langchain_store import langchain_rag_store
-from app.rag.store import rag_store
+from app.rag.factory import get_rag_store
 
 app = FastAPI(
     title=settings.app_name,
@@ -83,11 +81,8 @@ def stack_status():
     """Status do serviço com info de LLM, RAG e vertical."""
     vertical = get_current_vertical()
     
-    # Usa o store configurado
-    if settings.retrieval_method == "langchain":
-        escritorios, docs, chunks = langchain_rag_store.stats()
-    else:
-        escritorios, docs, chunks = rag_store.stats()
+    store = get_rag_store()
+    escritorios, docs, chunks = store.stats()
     
     # Info do LLM
     llm_info = get_provider_info()
@@ -141,7 +136,7 @@ def get_verticals():
 @app.get("/v1/rag/{escritorio_id}/documents", response_model=list[KnowledgeDocument])
 def list_documents(escritorio_id: str):
     """Lista documentos indexados."""
-    store = langchain_rag_store if settings.retrieval_method == "langchain" else rag_store
+    store = get_rag_store()
     store.seed_defaults(escritorio_id)
     return store.list_documents(escritorio_id)
 
@@ -149,14 +144,14 @@ def list_documents(escritorio_id: str):
 @app.post("/v1/rag/{escritorio_id}/documents", response_model=KnowledgeDocument)
 def add_document(escritorio_id: str, body: DocumentCreate):
     """Adiciona documento à base de conhecimento."""
-    store = langchain_rag_store if settings.retrieval_method == "langchain" else rag_store
+    store = get_rag_store()
     return store.add_document(escritorio_id, body)
 
 
 @app.delete("/v1/rag/{escritorio_id}/documents/{document_id}")
 def remove_document(escritorio_id: str, document_id: str):
     """Remove documento da base."""
-    store = langchain_rag_store if settings.retrieval_method == "langchain" else rag_store
+    store = get_rag_store()
     if not store.remove_document(escritorio_id, document_id):
         raise HTTPException(status_code=404, detail="Documento não encontrado")
     return {"ok": True}
@@ -165,14 +160,14 @@ def remove_document(escritorio_id: str, document_id: str):
 @app.post("/v1/rag/{escritorio_id}/search", response_model=SearchResult)
 def search(escritorio_id: str, body: SearchRequest):
     """Busca semântica/lexical na base de conhecimento."""
-    store = langchain_rag_store if settings.retrieval_method == "langchain" else rag_store
+    store = get_rag_store()
     return store.search(escritorio_id, body.query, body.limit)
 
 
 @app.post("/v1/rag/{escritorio_id}/seed")
 def seed(escritorio_id: str):
     """Popula base com conhecimento inicial."""
-    store = langchain_rag_store if settings.retrieval_method == "langchain" else rag_store
+    store = get_rag_store()
     count = store.seed_defaults(escritorio_id)
     return {"seeded": count, "total": len(store.list_documents(escritorio_id))}
 
@@ -350,6 +345,8 @@ async def agent_ask(body: AgentRequest):
         raise HTTPException(status_code=503, detail="Agent desabilitado na configuração")
     
     try:
+        from app.agents.legal_assistant import run_agent
+
         result = await run_agent(
             body.question,
             body.escritorio_id,

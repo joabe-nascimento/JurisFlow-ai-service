@@ -10,7 +10,7 @@ from app.llm.provider import (
     get_provider_attempt_order,
 )
 from app.llm.response_quality import is_invalid_assistant_response
-from app.rag.langchain_store import langchain_rag_store
+from app.rag.factory import get_rag_store
 from app.verticals.loader import get_current_vertical
 
 
@@ -32,10 +32,11 @@ def _format_history(history: list | None) -> str:
 def _retrieve_context(escritorio_id: str, message: str, use_rag: bool) -> str:
     if not use_rag:
         return "RAG desabilitado para esta conversa."
-    result = langchain_rag_store.search(escritorio_id, message, limit=4)
+    store = get_rag_store()
+    result = store.search(escritorio_id, message, limit=4)
     if not result.chunks:
-        langchain_rag_store.seed_defaults(escritorio_id)
-        result = langchain_rag_store.search(escritorio_id, message, limit=4)
+        store.seed_defaults(escritorio_id)
+        result = store.search(escritorio_id, message, limit=4)
     if not result.chunks:
         return "Nenhum documento relevante na base do escritório."
     return "\n\n---\n\n".join(

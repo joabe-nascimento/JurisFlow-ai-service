@@ -5,7 +5,7 @@ from langchain_core.prompts import ChatPromptTemplate
 from langchain_core.runnables import RunnablePassthrough
 
 from app.llm.provider import get_llm
-from app.rag.langchain_store import langchain_rag_store
+from app.rag.factory import get_rag_store
 from app.verticals.loader import get_current_vertical
 
 
@@ -31,7 +31,8 @@ def create_contract_analysis_chain(escritorio_id: str):
     # Retriever do RAG
     def get_context(inputs: dict) -> str:
         query = f"cláusulas de risco contratos {inputs.get('contract_text', '')[:200]}"
-        result = langchain_rag_store.search(escritorio_id, query, limit=3)
+        store = get_rag_store()
+        result = store.search(escritorio_id, query, limit=3)
         if not result.chunks:
             return "Nenhum conhecimento específico encontrado."
         return "\n\n".join([f"- {c.content}" for c in result.chunks])
