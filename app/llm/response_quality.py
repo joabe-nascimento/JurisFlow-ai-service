@@ -1,5 +1,7 @@
 """Validação de respostas do LLM — evita vazar metadados de safety para o usuário."""
 
+from __future__ import annotations
+
 import re
 
 # Padrões típicos de modelos free que retornam classificação em vez de resposta

@@ -1,5 +1,7 @@
 """Assistente conversacional com RAG + LLM (configurável por vertical)."""
 
+from __future__ import annotations
+
 from langchain_core.output_parsers import StrOutputParser
 from langchain_core.prompts import ChatPromptTemplate
 

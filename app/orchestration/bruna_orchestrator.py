@@ -1,5 +1,7 @@
 """Orchestrator da Bruna - decide entre chain simples ou agent com tools."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 from app.chains.bruna_assistant import bruna_chat

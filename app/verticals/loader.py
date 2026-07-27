@@ -9,6 +9,8 @@ Cada vertical tem sua própria pasta com:
 - seed.yaml: base de conhecimento inicial
 """
 
+from __future__ import annotations
+
 from pathlib import Path
 from typing import Any, Optional
 import yaml

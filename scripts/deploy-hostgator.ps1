@@ -52,16 +52,17 @@ $tarArgs = @(
 if ($LASTEXITCODE -ne 0) { throw "tar falhou" }
 
 Write-Host "[2/3] Enviando para $remoteDir ..." -ForegroundColor Cyan
-& ssh @sshBase $sshTarget "echo deploy-ssh-ok"
-if ($LASTEXITCODE -ne 0) { throw "SSH indisponivel (exit $LASTEXITCODE). Tente novamente em alguns minutos." }
-& ssh @sshBase $sshTarget "mkdir -p $remoteDir"
-if ($LASTEXITCODE -ne 0) { throw "SSH mkdir falhou" }
 & scp @scpBase $archive "${sshTarget}:/tmp/$ArchiveName"
-if ($LASTEXITCODE -ne 0) { throw "SCP archive falhou" }
+if ($LASTEXITCODE -ne 0) { throw "SCP archive falhou — SSH pode estar instavel. Tente em 2-3 minutos." }
 & scp @scpBase "$root\scripts\setup-hostgator.sh" "${sshTarget}:/tmp/setup-jurisflow-hostgator.sh"
 if ($LASTEXITCODE -ne 0) { throw "SCP setup script falhou" }
-& ssh @sshBase $sshTarget "cd $remoteDir && tar -xzf /tmp/$ArchiveName && sed -i 's/\r$//' /tmp/setup-jurisflow-hostgator.sh && bash /tmp/setup-jurisflow-hostgator.sh"
-if ($LASTEXITCODE -ne 0) { throw "Setup remoto falhou" }
+
+$remoteCmd = @"
+mkdir -p $remoteDir && cd $remoteDir && tar -xzf /tmp/$ArchiveName && cp -f .env.hostgator .env 2>/dev/null || true && sed -i 's/\r$//' /tmp/setup-jurisflow-hostgator.sh && bash /tmp/setup-jurisflow-hostgator.sh
+"@
+
+& ssh @sshBase $sshTarget $remoteCmd
+if ($LASTEXITCODE -ne 0) { throw "Setup remoto falhou (exit $LASTEXITCODE)" }
 
 Write-Host "[3/3] Smoke test externo..." -ForegroundColor Cyan
 try {

@@ -1,5 +1,7 @@
 """Provedor de LLM — suporta OpenRouter, Azure OpenAI e OpenAI."""
 
+from __future__ import annotations
+
 from typing import Optional
 
 from langchain_core.language_models import BaseChatModel
