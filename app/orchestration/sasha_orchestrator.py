@@ -8,7 +8,7 @@ from app.chains.sasha_assistant import sasha_chat
 from app.config import settings
 from app.llm.errors import LLMRateLimitError
 from app.orchestration.router import route_query
-from app.tools.integration_api import integration_tools
+from app.tools.integration_api import get_integration_tools
 from app.agents.tools import legal_tools
 
 
@@ -39,7 +39,9 @@ async def sasha_orchestrator(
     if strategy == "agent" and settings.agent_enabled:
         from app.agents.legal_assistant import run_agent as run_legal_agent
 
-        all_tools = legal_tools + integration_tools
+        # escritorio_id vem do backend (payload autenticado), nunca do LLM —
+        # as tools de integração já saem com o tenant fixado via closure.
+        all_tools = legal_tools + get_integration_tools(escritorio_id)
 
         question = message
         if numero_processo_atual:
@@ -52,6 +54,7 @@ async def sasha_orchestrator(
             question=question,
             escritorio_id=escritorio_id,
             mode="full",
+            tools=all_tools,
         )
 
         steps = result.get("steps", [])

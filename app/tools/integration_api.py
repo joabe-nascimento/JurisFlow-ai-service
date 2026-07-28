@@ -7,10 +7,28 @@ um endpoint INTERNO (servidor-a-servidor), autenticado por segredo compartilhado
 (header X-Internal-Secret) — não é a API pública usada por integrações de terceiros.
 """
 
-from typing import Optional, Dict, Any
+from functools import partial
+from typing import Optional, Dict, Any, List
 from urllib.parse import quote
 import httpx
-from langchain_core.tools import tool
+from langchain_core.tools import StructuredTool
+from pydantic import BaseModel, Field
+
+
+class _BuscarProcessoArgs(BaseModel):
+    numero_processo: str = Field(description="Número do processo (formato: 0000000-00.0000.0.00.0000)")
+
+
+class _ListarPrazosArgs(BaseModel):
+    dias: int = Field(default=7, description="Número de dias à frente para buscar (padrão: 7)")
+
+
+class _BuscarClienteArgs(BaseModel):
+    nome: str = Field(description="Nome ou parte do nome do cliente")
+
+
+class _VerificarPrazoProcessoArgs(BaseModel):
+    numero_processo: str = Field(description="Número do processo")
 
 
 def get_integration_api_url() -> str:
@@ -73,14 +91,12 @@ async def call_integration_api(
         return {"error": f"Erro ao chamar API de integração: {str(e)}"}
 
 
-@tool
-async def buscar_processo(numero_processo: str, escritorio_id: str = "default") -> str:
+async def _buscar_processo(numero_processo: str, escritorio_id: str) -> str:
     """
     Busca informações de um processo no sistema.
 
     Args:
         numero_processo: Número do processo (formato: 0000000-00.0000.0.00.0000)
-        escritorio_id: ID do escritório/tenant (opcional)
 
     Returns:
         Informações do processo ou mensagem de erro
@@ -118,14 +134,12 @@ Tribunal: {processo.get('tribunal', 'N/A')}
     return info
 
 
-@tool
-async def listar_prazos_proximos(dias: int = 7, escritorio_id: str = "default") -> str:
+async def _listar_prazos_proximos(escritorio_id: str, dias: int = 7) -> str:
     """
     Lista prazos processuais que vencem nos próximos dias.
 
     Args:
         dias: Número de dias à frente para buscar (padrão: 7)
-        escritorio_id: ID do escritório/tenant (opcional)
 
     Returns:
         Lista de prazos vencendo ou mensagem se não houver
@@ -156,14 +170,12 @@ async def listar_prazos_proximos(dias: int = 7, escritorio_id: str = "default") 
     return info
 
 
-@tool
-async def buscar_cliente(nome: str, escritorio_id: str = "default") -> str:
+async def _buscar_cliente(nome: str, escritorio_id: str) -> str:
     """
     Busca informações de um cliente no sistema.
 
     Args:
         nome: Nome ou parte do nome do cliente
-        escritorio_id: ID do escritório/tenant (opcional)
 
     Returns:
         Informações do cliente ou mensagem de erro
@@ -193,14 +205,12 @@ Telefone: {cliente.get('telefone', 'N/A')}
     return info
 
 
-@tool
-async def verificar_prazo_processo(numero_processo: str, escritorio_id: str = "default") -> str:
+async def _verificar_prazo_processo(numero_processo: str, escritorio_id: str) -> str:
     """
     Verifica prazos específicos de um processo.
 
     Args:
         numero_processo: Número do processo
-        escritorio_id: ID do escritório/tenant (opcional)
 
     Returns:
         Próximos prazos do processo ou mensagem se não houver
@@ -230,14 +240,51 @@ async def verificar_prazo_processo(numero_processo: str, escritorio_id: str = "d
     return info
 
 
-# Lista de todas as tools de integração para o agent
-# (tools que interagem com a API interna do backend)
-integration_tools = [
-    buscar_processo,
-    listar_prazos_proximos,
-    buscar_cliente,
-    verificar_prazo_processo,
-]
+def get_integration_tools(escritorio_id: str) -> List[StructuredTool]:
+    """
+    Cria as tools de integração já *escopadas* para um escritorio_id fixo.
 
-# Alias para backward compatibility
-java_api_tools = integration_tools
+    Importante: o escritorio_id NÃO fica exposto como parâmetro que o LLM
+    possa escolher/alucinar — é fixado pelo backend (vindo da sessão/JWT do
+    usuário autenticado), evitando que uma tool acesse dados de outro
+    escritório por engano ou por injeção de prompt.
+    """
+    return [
+        StructuredTool.from_function(
+            coroutine=partial(_buscar_processo, escritorio_id=escritorio_id),
+            name="buscar_processo",
+            description=(
+                "Busca informações de um processo no sistema pelo número "
+                "(formato: 0000000-00.0000.0.00.0000). "
+                "Exemplo: buscar_processo(numero_processo='0001234-56.2024.8.26.0100')"
+            ),
+            args_schema=_BuscarProcessoArgs,
+        ),
+        StructuredTool.from_function(
+            coroutine=partial(_listar_prazos_proximos, escritorio_id=escritorio_id),
+            name="listar_prazos_proximos",
+            description=(
+                "Lista prazos processuais que vencem nos próximos N dias (padrão 7). "
+                "Exemplo: listar_prazos_proximos(dias=15)"
+            ),
+            args_schema=_ListarPrazosArgs,
+        ),
+        StructuredTool.from_function(
+            coroutine=partial(_buscar_cliente, escritorio_id=escritorio_id),
+            name="buscar_cliente",
+            description=(
+                "Busca informações de um cliente do escritório pelo nome. "
+                "Exemplo: buscar_cliente(nome='João Silva')"
+            ),
+            args_schema=_BuscarClienteArgs,
+        ),
+        StructuredTool.from_function(
+            coroutine=partial(_verificar_prazo_processo, escritorio_id=escritorio_id),
+            name="verificar_prazo_processo",
+            description=(
+                "Verifica os prazos cadastrados para um processo específico pelo número. "
+                "Exemplo: verificar_prazo_processo(numero_processo='0001234-56.2024.8.26.0100')"
+            ),
+            args_schema=_VerificarPrazoProcessoArgs,
+        ),
+    ]

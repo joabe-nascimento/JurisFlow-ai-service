@@ -1,6 +1,6 @@
 """Agente jurídico com tool calling (compatível com GPT-5 / modelos sem parâmetro stop)."""
 
-from typing import Literal
+from typing import Literal, Optional, Sequence
 
 try:
     # LangChain >= 1.0 moveu os agentes clássicos para este pacote separado.
@@ -15,14 +15,20 @@ from app.config import settings
 from app.llm.provider import get_llm
 
 
-def create_legal_agent(escritorio_id: str = "default") -> AgentExecutor:
+def create_legal_agent(escritorio_id: str = "default", tools: Optional[Sequence] = None) -> AgentExecutor:
     """
     Cria agente jurídico com tool calling nativo.
 
     Usa function calling em vez de ReAct para evitar o parâmetro `stop`,
     que não é suportado por modelos GPT-5/o-series no Azure OpenAI.
+
+    Args:
+        tools: lista de tools a expor ao agente (default: apenas legal_tools,
+            sem acesso a dados reais do escritório — usar sasha_orchestrator
+            para incluir as tools de integração escopadas por escritorio_id).
     """
     llm = get_llm(temperature=0.0)
+    active_tools = list(tools) if tools is not None else legal_tools
 
     prompt = ChatPromptTemplate.from_messages([
         (
@@ -44,13 +50,13 @@ Responda à pergunta do advogado da melhor forma possível. Regras:
 
     agent = create_tool_calling_agent(
         llm=llm,
-        tools=legal_tools,
+        tools=active_tools,
         prompt=prompt,
     )
 
     return AgentExecutor(
         agent=agent,
-        tools=legal_tools,
+        tools=active_tools,
         verbose=settings.agent_verbose,
         max_iterations=settings.agent_max_iterations,
         handle_parsing_errors=True,
@@ -62,6 +68,7 @@ async def run_agent(
     question: str,
     escritorio_id: str = "default",
     mode: Literal["full", "answer_only"] = "full",
+    tools: Optional[Sequence] = None,
 ) -> dict:
     """
     Executa o agente jurídico.
@@ -70,11 +77,12 @@ async def run_agent(
         question: Pergunta do advogado
         escritorio_id: ID do escritório (para buscar_conhecimento)
         mode: 'full' retorna steps intermediários, 'answer_only' só resposta final
+        tools: lista de tools a expor (ver create_legal_agent)
 
     Returns:
         Dict com answer, intermediate_steps (se mode='full')
     """
-    agent_executor = create_legal_agent(escritorio_id)
+    agent_executor = create_legal_agent(escritorio_id, tools=tools)
 
     try:
         result = await agent_executor.ainvoke({
