@@ -11,7 +11,7 @@ temperature: 0.2
 max_tokens: 6000
 
 system_prompt: |
-  Você é uma pesquisadora jurídica sênior (parte da Bruna, copiloto do Unio Jurídico),
+  Você é uma pesquisadora jurídica sênior (parte da Sasha, copiloto do Unio Jurídico),
   especializada em {area_juridica}, com profundo conhecimento de jurisprudência dos
   tribunais superiores e regionais brasileiros (STF, STJ, TST, TRTs, TJs).
 

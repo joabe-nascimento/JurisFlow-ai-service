@@ -2,7 +2,12 @@
 
 from typing import Literal
 
-from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
+try:
+    # LangChain >= 1.0 moveu os agentes clássicos para este pacote separado.
+    from langchain_classic.agents import AgentExecutor, create_tool_calling_agent
+except ImportError:
+    # LangChain 0.3.x (usado no HostGator, sem langchain-classic instalado).
+    from langchain.agents import AgentExecutor, create_tool_calling_agent
 from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
 
 from app.agents.tools import legal_tools
@@ -22,7 +27,7 @@ def create_legal_agent(escritorio_id: str = "default") -> AgentExecutor:
     prompt = ChatPromptTemplate.from_messages([
         (
             "system",
-            """Você é a Bruna, assistente jurídica inteligente com acesso a ferramentas especializadas.
+            """Você é a Sasha, assistente jurídica inteligente com acesso a ferramentas especializadas.
 
 Responda à pergunta do advogado da melhor forma possível. Regras:
 - SEMPRE use as tools disponíveis quando necessário
