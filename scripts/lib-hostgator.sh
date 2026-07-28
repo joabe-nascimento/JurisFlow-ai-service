@@ -2,13 +2,20 @@
 # Constantes e funções compartilhadas para deploy no HostGator.
 
 APP_DIR="/home2/joabef36/jurisflow-ai"
-# Portas 8091, 8092 e 8094 ficaram com processos zumbis presos em sessoes SSH
-# isoladas (CloudLinux CageFS nao deixa matar de outra sessao, nem por PID, nem
-# por ps/fuser/lsof/pkill — o processo so aparece via curl na porta, invisivel
-# em qualquer ferramenta baseada em /proc de outra sessao). Mudado para 8095.
-# Se acontecer de novo, so migrar para outra porta livre (confirmar com
+# Portas 8091, 8092, 8094 e 8095 ficaram com processos zumbis presos em sessoes
+# SSH isoladas (CloudLinux CageFS provavelmente usa PID namespace por sessao —
+# nao da pra matar de outra sessao nem por PID, nem por ps/fuser/lsof/pkill; o
+# processo so aparece via curl na porta, invisivel em qualquer ferramenta
+# baseada em /proc de outra sessao). Mudado para 8096.
+#
+# IMPORTANTE: por causa disso, EVITE rodar deploy-hostgator.ps1 repetidamente
+# em sequencia rapida "so para testar" — cada deploy que roda jurisflow_stop
+# sem conseguir matar o processo anterior deixa um zumbi novo, e o processo
+# NOVO falha o bind silenciosamente (fica um log "address already in use" e o
+# processo ANTIGO com codigo desatualizado continua respondendo). Se isso
+# acontecer de novo, so migrar para a proxima porta livre (confirmar com
 # curl -m3 http://127.0.0.1:PORTA/health antes de reusar qualquer porta antiga).
-PORT=8095
+PORT=8096
 LOG_FILE="$APP_DIR/jurisflow.log"
 PID_FILE="$APP_DIR/jurisflow.pid"
 WATCHDOG_LOG="$APP_DIR/watchdog.log"
