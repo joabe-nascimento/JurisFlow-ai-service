@@ -51,6 +51,11 @@ async def call_integration_api(
 
         separator = "&" if "?" in endpoint else "?"
         url = f"{api_url}{endpoint}{separator}escritorio_id={quote(escritorio_id)}"
+        if secret:
+            # Alguns hosts (ex.: LiteSpeed/CGI na HostGator) descartam headers
+            # HTTP customizados antes de chegar ao PHP — mandamos o segredo
+            # também via query string como alternativa confiável.
+            url = f"{url}&internal_secret={quote(secret)}"
 
         async with httpx.AsyncClient(timeout=timeout) as client:
             if method == "GET":
