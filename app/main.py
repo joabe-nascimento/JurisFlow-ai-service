@@ -325,6 +325,7 @@ async def chain_predict_outcome(body: CaseOutcomeRequest):
 
 # ==================== Sasha ASSISTANT ====================
 
+# Endpoint novo (post-renomeação)
 @app.post("/v1/assistant/Sasha/chat", response_model=SashaChatResponse)
 async def sasha_chat_endpoint(body: SashaChatRequest):
     """
@@ -366,6 +367,13 @@ async def sasha_chat_endpoint(body: SashaChatRequest):
         raise HTTPException(status_code=429, detail=str(e))
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na Sasha: {str(e)}")
+
+
+# Endpoint legado (compatibilidade com produção antiga)
+@app.post("/v1/assistant/bruna/chat", response_model=SashaChatResponse)
+async def bruna_chat_endpoint_legacy(body: SashaChatRequest):
+    """Alias legado para /Sasha/chat (compatibilidade com deploy antigo)."""
+    return await sasha_chat_endpoint(body)
 
 
 # ==================== LANGCHAIN AGENTS ====================
