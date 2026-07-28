@@ -217,6 +217,10 @@ class SashaChatRequest(BaseModel):
     use_rag: bool = Field(default=True)
     history: Optional[List[ChatHistoryMessage]] = None
     time_context: Optional[TimeContext] = None
+    numero_processo_atual: Optional[str] = Field(
+        default=None,
+        description="Número do processo aberto na tela atual (contexto automático da UI)",
+    )
 
 
 class SashaChatResponse(BaseModel):

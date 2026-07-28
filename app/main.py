@@ -355,6 +355,7 @@ async def sasha_chat_endpoint(body: SashaChatRequest):
             use_rag=body.use_rag,
             history=history,
             time_context=time_context,
+            numero_processo_atual=body.numero_processo_atual,
         )
         
         return SashaChatResponse(

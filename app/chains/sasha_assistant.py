@@ -85,6 +85,17 @@ Pode abrir com um cumprimento natural equivalente a "{correct_greeting}" — var
 ═══════════════════════════════════════════════════════════"""
 
 
+def _format_screen_context(numero_processo_atual: str | None) -> str:
+    """Formata o número do processo aberto na tela atual (contexto automático da UI)."""
+    if not numero_processo_atual:
+        return ""
+    return f"""═══════════════════════════════════════════════════════════
+CONTEXTO DA TELA (automático — não pergunte, use se fizer sentido):
+O usuário está com o processo {numero_processo_atual} aberto agora. Se a pergunta
+não especificar outro número, considere que ela é sobre este processo.
+═══════════════════════════════════════════════════════════"""
+
+
 def _build_chain(llm):
     vertical = get_current_vertical()
     prompt_config = vertical.load_prompt(vertical.assistant_prompt_file)
@@ -97,8 +108,8 @@ def _build_chain(llm):
         message="{message}",
     )
     
-    # Adicionar contexto temporal ao template
-    template = "{time_context}\n\n" + template
+    # Adicionar contexto temporal e da tela ao template
+    template = "{time_context}\n\n{screen_context}\n\n" + template
     
     prompt = ChatPromptTemplate.from_template(template)
 
@@ -109,6 +120,7 @@ def _build_chain(llm):
                 inputs.get("time_context"),
                 is_first_message=not history,
             ),
+            "screen_context": _format_screen_context(inputs.get("numero_processo_atual")),
             "message": inputs["message"],
             "context": _retrieve_context(
                 inputs["escritorio_id"], inputs["message"], inputs["use_rag"]
@@ -151,6 +163,7 @@ async def sasha_chat(
     use_rag: bool = True,
     history: list | None = None,
     time_context: dict | None = None,
+    numero_processo_atual: str | None = None,
 ) -> str:
     """Chat conversacional com Sasha (1 chamada LLM + RAG), com fallback de provider."""
     inputs = {
@@ -159,6 +172,7 @@ async def sasha_chat(
         "use_rag": use_rag,
         "history": history,
         "time_context": time_context,
+        "numero_processo_atual": numero_processo_atual,
     }
 
     providers = get_provider_attempt_order()

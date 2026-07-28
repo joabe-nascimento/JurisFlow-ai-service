@@ -18,6 +18,7 @@ async def sasha_orchestrator(
     use_rag: bool = True,
     history: Optional[list] = None,
     time_context: Optional[dict] = None,
+    numero_processo_atual: Optional[str] = None,
 ) -> tuple[str, dict]:
     """
     Orchestrator da Sasha que decide a melhor estratégia.
@@ -40,8 +41,15 @@ async def sasha_orchestrator(
 
         all_tools = legal_tools + integration_tools
 
+        question = message
+        if numero_processo_atual:
+            question = (
+                f"(Contexto: o usuário está vendo o processo {numero_processo_atual} na tela agora; "
+                f"se a pergunta não citar outro número, considere que é sobre este processo)\n{message}"
+            )
+
         result = await run_legal_agent(
-            question=message,
+            question=question,
             escritorio_id=escritorio_id,
             mode="full",
         )
@@ -57,6 +65,7 @@ async def sasha_orchestrator(
             use_rag=use_rag,
             history=history,
             time_context=time_context,
+            numero_processo_atual=numero_processo_atual,
         )
         metadata["tools_used"] = []
 

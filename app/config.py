@@ -43,6 +43,11 @@ class Settings(BaseSettings):
     
     # Java API Integration
     java_api_url: str = "http://localhost:8082/api"
+
+    # Segredo compartilhado enviado no header X-Internal-Secret ao chamar a API
+    # interna do backend (ex.: Unio Jurídico /api/v1/interno). Deve bater com
+    # LEGAL_AI_INTERNAL_SECRET configurado no Symfony.
+    legal_api_secret: str = ""
     
     # Vertical (nicho/domínio) — define qual configuração carregar
     ai_vertical: str = "legal"  # legal | medical | financial | etc

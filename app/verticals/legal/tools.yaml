@@ -3,11 +3,15 @@
 # ════════════════════════════════════════════════════════════════════════════
 # Configuração das tools disponíveis para o agente
 
-# Tools que interagem com a API de integração (backend do produto)
+# Tools que interagem com a API interna do backend (Unio Jurídico).
+# Endpoints reais em /api/v1/interno (Symfony), autenticados por header
+# X-Internal-Secret (LEGAL_API_SECRET aqui == LEGAL_AI_INTERNAL_SECRET no Symfony).
+# Nota: esta seção é apenas documentação — as tools de fato estão implementadas
+# em app/tools/integration_api.py.
 integration_tools:
   - name: "buscar_processo"
     description: "Busca informações de um processo no sistema"
-    endpoint: "/v1/processos/search"
+    endpoint: "/processos?numero="
     method: "GET"
     parameters:
       - name: "numero_processo"
@@ -21,7 +25,7 @@ integration_tools:
     
   - name: "listar_prazos_proximos"
     description: "Lista prazos processuais que vencem nos próximos dias"
-    endpoint: "/v1/prazos/proximos"
+    endpoint: "/prazos?dias="
     method: "GET"
     parameters:
       - name: "dias"
@@ -36,7 +40,7 @@ integration_tools:
   
   - name: "buscar_cliente"
     description: "Busca informações de um cliente no sistema"
-    endpoint: "/v1/clientes/search"
+    endpoint: "/clientes?nome="
     method: "GET"
     parameters:
       - name: "nome"
@@ -50,7 +54,7 @@ integration_tools:
   
   - name: "verificar_prazo_processo"
     description: "Verifica prazos específicos de um processo"
-    endpoint: "/v1/prazos/processo/{numero_processo}"
+    endpoint: "/prazos/processo/{numero_processo}"
     method: "GET"
     parameters:
       - name: "numero_processo"
