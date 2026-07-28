@@ -1,4 +1,11 @@
+from dotenv import load_dotenv
 from pydantic_settings import BaseSettings
+
+# pydantic-settings lê o .env só para o próprio modelo Settings — não popula
+# os.environ. Os verticals (ex.: app/verticals/legal/loader.py) resolvem
+# variáveis dinâmicas por nome (ex.: ${LEGAL_API_URL:default}) via os.getenv(),
+# que ficava sempre None sem isso, caindo silenciosamente no default hardcoded.
+load_dotenv()
 
 
 class Settings(BaseSettings):
