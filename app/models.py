@@ -224,3 +224,13 @@ class BrunaChatResponse(BaseModel):
     assistant: str = "bruna"
     escritorio_id: str
     used_rag: bool = True
+    usage: Optional[dict] = None
+
+
+class TokenUsageSummary(BaseModel):
+    provider: str = ""
+    model: str = ""
+    lifetime: dict = Field(default_factory=dict)
+    today: dict = Field(default_factory=dict)
+    month: dict = Field(default_factory=dict)
+    last_request_at: Optional[str] = None

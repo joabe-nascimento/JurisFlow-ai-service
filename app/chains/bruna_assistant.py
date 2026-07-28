@@ -12,6 +12,7 @@ from app.llm.provider import (
     get_provider_attempt_order,
 )
 from app.llm.response_quality import is_invalid_assistant_response
+from app.llm.usage_tracker import extract_usage_from_message, record as record_token_usage
 from app.rag.factory import get_rag_store
 from app.verticals.loader import get_current_vertical
 
@@ -115,7 +116,20 @@ def _build_chain(llm):
             "history": _format_history(inputs.get("history")),
         }
 
-    return prepare | prompt | llm | StrOutputParser()
+    return prepare | prompt | llm
+
+
+def _answer_from_message(message) -> str:
+    content = getattr(message, "content", message)
+    if isinstance(content, list):
+        parts = []
+        for block in content:
+            if isinstance(block, dict) and block.get("type") == "text":
+                parts.append(str(block.get("text") or ""))
+            elif isinstance(block, str):
+                parts.append(block)
+        return "".join(parts).strip()
+    return str(content or "").strip()
 
 
 def _is_retryable_llm_error(exc: Exception) -> bool:
@@ -166,10 +180,18 @@ async def bruna_chat(
                     model=model_id,
                 )
                 chain = _build_chain(llm)
-                answer = await chain.ainvoke(inputs)
+                message_out = await chain.ainvoke(inputs)
+                answer = _answer_from_message(message_out)
                 if is_invalid_assistant_response(answer):
                     last_invalid_answer = answer
                     continue
+                usage = extract_usage_from_message(message_out)
+                record_token_usage(
+                    usage,
+                    source="bruna_chat",
+                    provider=provider,
+                    model=model_id or "",
+                )
                 return answer
             except Exception as exc:
                 if _is_retryable_llm_error(exc):

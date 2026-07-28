@@ -15,6 +15,7 @@ from app.chains.legal_research import research
 from app.config import settings
 from app.llm.errors import LLMRateLimitError
 from app.llm.provider import get_provider_info
+from app.llm.usage_tracker import get_summary as get_token_usage_summary
 from app.middleware.rate_limit import RateLimitMiddleware
 from app.verticals.loader import get_current_vertical, list_available_verticals
 from app.models import (
@@ -43,6 +44,7 @@ from app.models import (
     SearchRequest,
     SearchResult,
     StackStatus,
+    TokenUsageSummary,
 )
 from app.pipelines.runner import run_pipeline
 from app.rag.factory import get_rag_store
@@ -118,6 +120,18 @@ def stack_status():
         llm_model=llm_info["model"],
         llm_cost=llm_info["cost"],
     )
+
+
+@app.get("/v1/usage", response_model=TokenUsageSummary)
+def token_usage():
+    """Consumo acumulado de tokens do LLM (Azure OpenAI, etc.)."""
+    summary = get_token_usage_summary()
+    llm_info = get_provider_info()
+    if not summary.get("provider"):
+        summary["provider"] = llm_info.get("provider") or ""
+    if not summary.get("model"):
+        summary["model"] = llm_info.get("model") or ""
+    return TokenUsageSummary(**summary)
 
 
 @app.get("/v1/verticals")
@@ -346,6 +360,7 @@ async def bruna_chat_endpoint(body: BrunaChatRequest):
             answer=answer,
             escritorio_id=body.escritorio_id,
             used_rag=body.use_rag,
+            usage=get_token_usage_summary().get("today"),
         )
     except LLMRateLimitError as e:
         raise HTTPException(status_code=429, detail=str(e))
