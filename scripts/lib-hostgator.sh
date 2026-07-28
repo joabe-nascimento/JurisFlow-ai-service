@@ -52,16 +52,18 @@ jurisflow_start() {
 }
 
 jurisflow_install_cron() {
-  local cron_line="*/5 * * * * flock -n $LOCK_FILE $APP_DIR/scripts/watchdog-hostgator.sh >/dev/null 2>&1"
+  # CPU time (ulimit -t) do LVE do HostGator eh limitado a 120s (hard limit,
+  # nao pode ser aumentado). O processo uvicorn MORRE periodicamente ao
+  # acumular esse tempo de CPU. O watchdog precisa rodar a cada 1 min para
+  # minimizar a janela de indisponibilidade quando isso acontece.
+  local cron_line="* * * * * flock -n $LOCK_FILE $APP_DIR/scripts/watchdog-hostgator.sh >/dev/null 2>&1"
   local current
   current=$(crontab -l 2>/dev/null || true)
 
-  if echo "$current" | grep -Fq "watchdog-hostgator.sh"; then
-    return 0
-  fi
-
+  # Sempre reinstala (remove qualquer entrada antiga do watchdog, mesmo com
+  # intervalo diferente) para garantir que o intervalo atual seja aplicado.
   {
-    echo "$current" | sed '/watchdog\.sh/d' | sed '/^$/d'
+    echo "$current" | sed '/watchdog-hostgator\.sh/d' | sed '/watchdog\.sh/d' | sed '/^$/d'
     echo "$cron_line"
   } | crontab -
 }
