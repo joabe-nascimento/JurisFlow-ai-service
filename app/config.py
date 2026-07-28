@@ -62,6 +62,11 @@ class Settings(BaseSettings):
     class Config:
         env_file = ".env"
         env_file_encoding = "utf-8"
+        # Cada vertical define suas próprias env vars de integração (ex.:
+        # LEGAL_API_URL, MEDICAL_API_URL — ver VerticalConfig.integration_api_url).
+        # Sem "ignore" aqui, qualquer uma dessas variáveis extras no .env quebra
+        # a inicialização do Settings global com "extra_forbidden".
+        extra = "ignore"
 
 
 settings = Settings()

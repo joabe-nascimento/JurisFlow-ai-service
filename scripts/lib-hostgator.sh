@@ -2,9 +2,12 @@
 # Constantes e funções compartilhadas para deploy no HostGator.
 
 APP_DIR="/home2/joabef36/jurisflow-ai"
-# Porta 8091 ficou com um processo zumbi preso em sessao SSH isolada
-# (CloudLinux jail nao deixa matar de outra sessao). Mudado para 8092.
-PORT=8092
+# Portas 8091 e 8092 ficaram com processos zumbis presos em sessoes SSH isoladas
+# (CloudLinux jail nao deixa matar de outra sessao, nem por PID, nem por fuser/lsof
+# — o processo so aparece via curl na porta, invisivel em ps/kill/fuser). Mudado
+# para 8094. Se acontecer de novo, so migrar para outra porta livre (confirmar
+# com curl -m3 http://127.0.0.1:PORTA/health antes de reusar qualquer porta antiga).
+PORT=8094
 LOG_FILE="$APP_DIR/jurisflow.log"
 PID_FILE="$APP_DIR/jurisflow.pid"
 WATCHDOG_LOG="$APP_DIR/watchdog.log"
