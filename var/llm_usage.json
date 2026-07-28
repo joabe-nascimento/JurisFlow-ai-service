@@ -1,0 +1,17 @@
+{
+  "prompt_tokens": 1270,
+  "completion_tokens": 489,
+  "total_tokens": 1759,
+  "requests": 1,
+  "by_day": {
+    "2026-07-28": {
+      "prompt_tokens": 1270,
+      "completion_tokens": 489,
+      "total_tokens": 1759,
+      "requests": 1
+    }
+  },
+  "last_request_at": "2026-07-28T01:49:01.018650+00:00",
+  "provider": "azure",
+  "model": ""
+}

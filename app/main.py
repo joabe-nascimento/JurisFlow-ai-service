@@ -1,10 +1,10 @@
-from __future__ import annotations
+﻿from __future__ import annotations
 
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.chains.bruna_assistant import bruna_chat
-from app.orchestration.bruna_orchestrator import bruna_orchestrator
+from app.chains.sasha_assistant import sasha_chat
+from app.orchestration.sasha_orchestrator import sasha_orchestrator
 from app.chains.contract_analysis import analyze_contract
 from app.chains.document_generation import generate_document
 from app.chains.document_summary import summarize_document
@@ -21,8 +21,8 @@ from app.verticals.loader import get_current_vertical, list_available_verticals
 from app.models import (
     AgentRequest,
     AgentResponse,
-    BrunaChatRequest,
-    BrunaChatResponse,
+    SashaChatRequest,
+    SashaChatResponse,
     CaseOutcomeRequest,
     CaseOutcomeResponse,
     ContractAnalysisRequest,
@@ -323,12 +323,12 @@ async def chain_predict_outcome(body: CaseOutcomeRequest):
         raise HTTPException(status_code=500, detail=f"Erro na previsão: {str(e)}")
 
 
-# ==================== BRUNA ASSISTANT ====================
+# ==================== Sasha ASSISTANT ====================
 
-@app.post("/v1/assistant/bruna/chat", response_model=BrunaChatResponse)
-async def bruna_chat_endpoint(body: BrunaChatRequest):
+@app.post("/v1/assistant/Sasha/chat", response_model=SashaChatResponse)
+async def sasha_chat_endpoint(body: SashaChatRequest):
     """
-    Bruna — assistente jurídica conversacional com orchestration inteligente.
+    Sasha — assistente jurídica conversacional com orchestration inteligente.
     
     Agora usa router que decide automaticamente:
     - Chain (RAG + LLM) para perguntas gerais
@@ -348,7 +348,7 @@ async def bruna_chat_endpoint(body: BrunaChatRequest):
             }
         
         # Usa orchestrator em vez da chain simples
-        answer, metadata = await bruna_orchestrator(
+        answer, metadata = await sasha_orchestrator(
             escritorio_id=body.escritorio_id,
             message=body.message,
             use_rag=body.use_rag,
@@ -356,7 +356,7 @@ async def bruna_chat_endpoint(body: BrunaChatRequest):
             time_context=time_context,
         )
         
-        return BrunaChatResponse(
+        return SashaChatResponse(
             answer=answer,
             escritorio_id=body.escritorio_id,
             used_rag=body.use_rag,
@@ -365,7 +365,7 @@ async def bruna_chat_endpoint(body: BrunaChatRequest):
     except LLMRateLimitError as e:
         raise HTTPException(status_code=429, detail=str(e))
     except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Erro na Bruna: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Erro na Sasha: {str(e)}")
 
 
 # ==================== LANGCHAIN AGENTS ====================
@@ -408,3 +408,4 @@ async def agent_ask(body: AgentRequest):
 def pipeline_run(body: PipelineRunRequest):
     """Pipeline cognitivo (legado - considere usar chains/agent)."""
     return run_pipeline(body)
+

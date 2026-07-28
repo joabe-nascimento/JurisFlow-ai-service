@@ -1,4 +1,4 @@
-# ════════════════════════════════════════════════════════════════════════════
+﻿# ════════════════════════════════════════════════════════════════════════════
 # LEGAL VERTICAL - MAIN CONFIGURATION
 # ════════════════════════════════════════════════════════════════════════════
 # Configuração principal do vertical jurídico (JurisFlow)
@@ -10,7 +10,7 @@ vertical:
   domain: "Jurídico"
 
 assistant:
-  name: "Bruna"
+  name: "Sasha"
   role: "Assistente Jurídica"
   prompt_file: "assistant.yaml"
 
@@ -57,3 +57,4 @@ agent:
   max_iterations: 10
   verbose: true
   tools_file: "tools.yaml"
+

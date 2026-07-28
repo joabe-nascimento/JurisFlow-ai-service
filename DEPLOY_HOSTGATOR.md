@@ -155,27 +155,28 @@ RewriteRule ^(.*)$ http://127.0.0.1:8090/$1 [P,L]
      }'
    ```
 
-## PASSO 8: Configurar auto-restart (opcional, mas recomendado)
-## ==============================================================
+## PASSO 8: Auto-restart (watchdog via cron)
+## ==========================================
 
-O processo uvicorn pode cair se o servidor reiniciar. Para garantir que ele sempre
-rode, adicione um cronjob:
+O `scripts/setup-hostgator.sh` instala automaticamente um cron que roda a cada 5
+minutos com `flock` (evita reinícios concorrentes). O watchdog verifica
+`/health` na porta **8091** e reinicia com `setsid` (desacoplado da sessão SSH).
 
-1. No cPanel, vá em: Advanced > Cron Jobs
-2. Adicione um novo job que roda a cada 5 minutos:
-
-**Minuto:** */5
-**Hora:** *
-**Dia:** *
-**Mês:** *
-**Dia da semana:** *
-
-**Comando:**
+Comando instalado no cron:
 ```bash
-source /home/usuario/virtualenv/ia_uniojuridico_com_br/3.11/bin/activate && cd /home/usuario/jurisflow-ai && pgrep -f "uvicorn app.main:app" || nohup uvicorn app.main:app --host 0.0.0.0 --port 8090 > jurisflow.log 2>&1 &
+*/5 * * * * flock -n /home2/joabef36/jurisflow-ai/.watchdog.lock /home2/joabef36/jurisflow-ai/scripts/watchdog-hostgator.sh >/dev/null 2>&1
 ```
 
-Isso verifica se o uvicorn está rodando e reinicia se necessário.
+Comandos manuais úteis:
+```bash
+bash scripts/start-hostgator.sh   # inicia desacoplado (setsid)
+bash scripts/stop-hostgator.sh    # para o serviço
+bash scripts/watchdog-hostgator.sh  # força verificação imediata
+tail -f watchdog.log              # log do watchdog
+```
+
+> **Nota:** `systemd --user` não funciona no HostGator compartilhado. O cron +
+> `setsid` é a solução persistente recomendada.
 
 ## PASSO 9: Atualizar o Symfony (.env no HostGator)
 ## ==================================================

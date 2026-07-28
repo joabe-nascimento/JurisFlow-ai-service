@@ -1,4 +1,4 @@
-"""Assistente conversacional com RAG + LLM (configurável por vertical)."""
+﻿"""Assistente conversacional com RAG + LLM (configurável por vertical)."""
 
 from __future__ import annotations
 
@@ -25,7 +25,7 @@ def _format_history(history: list | None) -> str:
     for i, msg in enumerate(history[-12:], start=1):
         if isinstance(msg, dict):
             role = msg.get("role", "user")
-            label = "Advogado" if role == "user" else "Bruna"
+            label = "Advogado" if role == "user" else "Sasha"
             content = (msg.get("content") or "")[:800]
             # Numerar as mensagens para facilitar referência
             lines.append(f"[{i}] {label}: {content}")
@@ -54,7 +54,7 @@ def _format_time_context(time_context: dict | None, is_first_message: bool) -> s
     O cumprimento (bom dia/boa tarde/boa noite) só é sugerido na PRIMEIRA
     mensagem da conversa. Nas respostas seguintes, apenas a data/hora fica
     disponível como contexto, sem instrução de cumprimento — evita que a
-    Bruna repita "bom dia"/"boa noite" em toda resposta, o que soa robótico.
+    Sasha repita "bom dia"/"boa noite" em toda resposta, o que soa robótico.
     """
     if not time_context:
         return ""
@@ -145,14 +145,14 @@ def _is_retryable_llm_error(exc: Exception) -> bool:
     )
 
 
-async def bruna_chat(
+async def sasha_chat(
     escritorio_id: str,
     message: str,
     use_rag: bool = True,
     history: list | None = None,
     time_context: dict | None = None,
 ) -> str:
-    """Chat conversacional com Bruna (1 chamada LLM + RAG), com fallback de provider."""
+    """Chat conversacional com Sasha (1 chamada LLM + RAG), com fallback de provider."""
     inputs = {
         "message": message,
         "escritorio_id": escritorio_id,
@@ -188,7 +188,7 @@ async def bruna_chat(
                 usage = extract_usage_from_message(message_out)
                 record_token_usage(
                     usage,
-                    source="bruna_chat",
+                    source="sasha_chat",
                     provider=provider,
                     model=model_id or "",
                 )
@@ -228,3 +228,4 @@ async def bruna_chat(
         f"{abertura} No momento estou com instabilidade no provedor de IA, mas posso ajudar com "
         "prazos, contratos, LGPD e a base do escritório. O que você precisa?"
     )
+

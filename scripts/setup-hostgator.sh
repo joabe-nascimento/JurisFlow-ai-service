@@ -2,14 +2,13 @@
 # Setup remoto do JurisFlow AI no HostGator (Python 3.9)
 set -eu
 
-APP_DIR="/home2/joabef36/jurisflow-ai"
-PORT=8091
-LOG_FILE="$APP_DIR/jurisflow.log"
-PID_FILE="$APP_DIR/jurisflow.pid"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+# shellcheck source=lib-hostgator.sh
+source "$SCRIPT_DIR/lib-hostgator.sh"
 
 cd "$APP_DIR"
 
-echo "[1/5] Preparando ambiente..."
+echo "[1/6] Preparando ambiente..."
 if [ ! -f .venv/bin/python ]; then
   rm -rf .venv
   /usr/bin/virtualenv --copies -p /usr/bin/python3 .venv
@@ -23,24 +22,18 @@ if [ -f .env.hostgator ]; then
   cp .env.hostgator .env
 fi
 
-echo "[2/5] Parando instancia anterior..."
-if [ -f "$PID_FILE" ]; then
-  OLD_PID=$(cat "$PID_FILE" 2>/dev/null || true)
-  if [ -n "${OLD_PID:-}" ] && kill -0 "$OLD_PID" 2>/dev/null; then
-    kill "$OLD_PID" || true
-    sleep 2
-  fi
-fi
-pkill -f "uvicorn app.main:app --host 0.0.0.0 --port $PORT" 2>/dev/null || true
-sleep 1
+chmod +x "$SCRIPT_DIR"/*.sh 2>/dev/null || true
+chmod +x "$APP_DIR/watchdog.sh" 2>/dev/null || true
 
-echo "[3/5] Iniciando JurisFlow na porta $PORT..."
-nohup .venv/bin/uvicorn app.main:app --host 0.0.0.0 --port "$PORT" > "$LOG_FILE" 2>&1 &
-echo $! > "$PID_FILE"
+echo "[2/6] Parando instancia anterior..."
+jurisflow_stop
+
+echo "[3/6] Iniciando JurisFlow (setsid, desacoplado da sessao SSH)..."
+jurisflow_start
 sleep 8
 
-echo "[4/5] Verificando health..."
-if curl -sf "http://127.0.0.1:$PORT/health" >/dev/null; then
+echo "[4/6] Verificando health..."
+if jurisflow_health_ok; then
   echo "OK: JurisFlow respondendo em 127.0.0.1:$PORT"
   curl -s "http://127.0.0.1:$PORT/health"
 else
@@ -49,7 +42,12 @@ else
   exit 1
 fi
 
-echo "[5/5] Limpando cache Symfony..."
+echo "[5/6] Instalando cron watchdog (a cada 5 min, com flock)..."
+jurisflow_install_cron
+echo "Cron atual:"
+crontab -l | grep -F "watchdog-hostgator.sh" || true
+
+echo "[6/6] Limpando cache Symfony..."
 cd /home2/joabef36/unio-uniojuridico
 php bin/console cache:clear --env=prod --no-warmup 2>/dev/null || true
 php bin/console cache:warmup --env=prod 2>/dev/null || true

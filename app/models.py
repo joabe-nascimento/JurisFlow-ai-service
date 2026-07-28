@@ -1,4 +1,4 @@
-from datetime import datetime
+﻿from datetime import datetime
 from typing import List, Optional
 
 from pydantic import BaseModel, Field
@@ -197,7 +197,7 @@ class AgentResponse(BaseModel):
     error: Optional[bool] = None
 
 
-# ==================== BRUNA ASSISTANT ====================
+# ==================== Sasha ASSISTANT ====================
 
 class ChatHistoryMessage(BaseModel):
     role: str
@@ -211,7 +211,7 @@ class TimeContext(BaseModel):
     period: str = Field(..., description="Período do dia: manhã, tarde ou noite")
 
 
-class BrunaChatRequest(BaseModel):
+class SashaChatRequest(BaseModel):
     message: str = Field(..., description="Mensagem do usuário")
     escritorio_id: str = Field(default="default")
     use_rag: bool = Field(default=True)
@@ -219,9 +219,9 @@ class BrunaChatRequest(BaseModel):
     time_context: Optional[TimeContext] = None
 
 
-class BrunaChatResponse(BaseModel):
+class SashaChatResponse(BaseModel):
     answer: str
-    assistant: str = "bruna"
+    assistant: str = "Sasha"
     escritorio_id: str
     used_rag: bool = True
     usage: Optional[dict] = None
@@ -234,3 +234,4 @@ class TokenUsageSummary(BaseModel):
     today: dict = Field(default_factory=dict)
     month: dict = Field(default_factory=dict)
     last_request_at: Optional[str] = None
+

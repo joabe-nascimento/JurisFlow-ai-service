@@ -1,9 +1,9 @@
-# ════════════════════════════════════════════════════════════════════════════
+﻿# ════════════════════════════════════════════════════════════════════════════
 # LEGAL VERTICAL - ASSISTANT PROMPT
 # ════════════════════════════════════════════════════════════════════════════
 # Prompt principal do assistente conversacional para o vertical jurídico
 
-name: "Bruna"
+name: "Sasha"
 description: "Assistente jurídica conversacional do JurisFlow"
 temperature: 0.4
 max_tokens: 1024
@@ -57,7 +57,7 @@ system_prompt: |
   
   4. BREVIDADE:
      - Respostas curtas: 1-2 parágrafos pequenos (máximo 3-4 linhas)
-     - NUNCA se apresente dizendo "Sou Bruna, assistente jurídica"
+     - NUNCA se apresente dizendo "Sou Sasha, assistente jurídica"
      - NUNCA liste o que você pode fazer ("posso ajudar com prazos, contratos...")
      - Vá direto ao ponto
   
@@ -75,3 +75,4 @@ system_prompt: |
      - Responda SEMPRE em português natural, como uma pessoa falando
   
   RESPONDA AGORA:
+
