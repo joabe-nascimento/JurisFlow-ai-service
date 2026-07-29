@@ -1,12 +1,16 @@
 # Deploy JurisFlow AI -> HostGator (shared hosting)
 param(
-    [string]$ArchiveName = "jurisflow-hostgator.tar.gz"
+    [string]$ArchiveName = "jurisflow-hostgator.tar.gz",
+    [switch]$Fast,
+    [switch]$SkipSmoke
 )
 
 $ErrorActionPreference = "Stop"
 $root = Split-Path -Parent (Split-Path -Parent $MyInvocation.MyCommand.Path)
 $unioRoot = "C:\projetos\Nova pasta\unio-corp\unio-corp"
 $cfgPath = Join-Path $unioRoot "config\deploy-uniojuridico.local.env"
+
+if ($Fast) { $SkipSmoke = $true }
 
 function Load-EnvFile {
     param([string]$Path, [hashtable]$Into)
@@ -37,6 +41,9 @@ $scpBase = @("-P", $sshPort, "-i", $keyFile, "-o", "StrictHostKeyChecking=accept
 $sshTarget = "${sshUser}@${sshHost}"
 
 Write-Host "== Deploy JurisFlow AI -> HostGator ==" -ForegroundColor Cyan
+if ($Fast) {
+    Write-Host "Modo: FAST (pip skip se inalterado, sem smoke)" -ForegroundColor Yellow
+}
 Set-Location $root
 
 $archive = Join-Path $env:TEMP $ArchiveName
@@ -56,19 +63,23 @@ Write-Host "[2/3] Enviando para $remoteDir ..." -ForegroundColor Cyan
 if ($LASTEXITCODE -ne 0) { throw "SCP archive falhou — SSH pode estar instavel. Tente em 2-3 minutos." }
 
 $remoteCmd = @"
-mkdir -p $remoteDir && cd $remoteDir && tar -xzf /tmp/$ArchiveName && cp -f .env.hostgator .env 2>/dev/null || true && sed -i 's/\r$//' scripts/*.sh watchdog.sh 2>/dev/null || true && bash scripts/setup-hostgator.sh
+mkdir -p $remoteDir && cd $remoteDir && tar -xzf /tmp/$ArchiveName && cp -f .env.hostgator .env 2>/dev/null || true && sed -i 's/\r$//' scripts/*.sh watchdog.sh 2>/dev/null || true && FAST_DEPLOY=$([int]$Fast) bash scripts/setup-hostgator.sh
 "@
 
 & ssh @sshBase $sshTarget $remoteCmd
 if ($LASTEXITCODE -ne 0) { throw "Setup remoto falhou (exit $LASTEXITCODE)" }
 
 Write-Host "[3/3] Smoke test externo..." -ForegroundColor Cyan
-try {
-    $body = '{"message":"Ola, bom dia","escritorio_id":"default","use_rag":false,"history":[],"time_context":{"date":"27/07/2026","time":"11:00","period":"manha"}}'
-    $resp = Invoke-WebRequest -Uri "https://uniojuridico.uniowork.com.br/api/chat" -Method POST -ContentType "application/json" -Body $body -UseBasicParsing -TimeoutSec 60
-    Write-Host $resp.Content
-} catch {
-    Write-Host "Smoke via site falhou (pode exigir login): $($_.Exception.Message)" -ForegroundColor Yellow
+if ($SkipSmoke) {
+    Write-Host "[skip] smoke test externo" -ForegroundColor DarkGray
+} else {
+    try {
+        $body = '{"message":"Ola, bom dia","escritorio_id":"default","use_rag":false,"history":[],"time_context":{"date":"27/07/2026","time":"11:00","period":"manha"}}'
+        $resp = Invoke-WebRequest -Uri "https://uniojuridico.uniowork.com.br/api/chat" -Method POST -ContentType "application/json" -Body $body -UseBasicParsing -TimeoutSec 15
+        Write-Host $resp.Content
+    } catch {
+        Write-Host "Smoke via site falhou (pode exigir login): $($_.Exception.Message)" -ForegroundColor Yellow
+    }
 }
 
 Write-Host "Deploy JurisFlow concluido." -ForegroundColor Green
