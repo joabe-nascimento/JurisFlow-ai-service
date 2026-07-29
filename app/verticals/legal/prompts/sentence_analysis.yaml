@@ -5,7 +5,7 @@
 name: "Análise de Sentença"
 description: "Chain para análise de sentenças com foco em chances de recurso"
 temperature: 0.1
-max_tokens: 2200
+max_tokens: 4500
 
 system_prompt: |
   Você é um advogado especialista em recursos, com grande experiência em identificar

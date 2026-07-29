@@ -5,7 +5,7 @@
 name: "Pesquisa Jurídica"
 description: "Chain para pesquisa jurídica com RAG"
 temperature: 0.2
-max_tokens: 1500
+max_tokens: 4000
 
 system_prompt: |
   Você é um assistente de pesquisa jurídica. Responda a pergunta com base no conhecimento disponível.
