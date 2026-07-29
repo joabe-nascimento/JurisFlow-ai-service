@@ -71,12 +71,14 @@ class ChunkRecord:
         document_title: str,
         category: str,
         content: str,
+        source: str = "Manual",
     ):
         self.chunk_id = chunk_id
         self.document_id = document_id
         self.document_title = document_title
         self.category = category
         self.content = content
+        self.source = source
 
 
 class RAGStore:
@@ -190,6 +192,7 @@ class RAGStore:
                     document_title=doc.title,
                     category=doc.category,
                     content=text,
+                    source=doc.source,
                 )
             )
 
@@ -231,6 +234,7 @@ class RAGStore:
                         category=chunk.category,
                         content=chunk.content,
                         score=round(score * 100, 2),
+                        source=chunk.source,
                     )
                 )
         return result
@@ -249,6 +253,7 @@ class RAGStore:
                         category=chunk.category,
                         content=chunk.content,
                         score=score,
+                        source=chunk.source,
                     )
                 )
         return result

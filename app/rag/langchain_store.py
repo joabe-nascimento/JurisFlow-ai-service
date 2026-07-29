@@ -157,6 +157,7 @@ class LangChainRAGStore:
                     category=doc.metadata.get("category", "Geral"),
                     content=doc.page_content,
                     score=score,
+                    source=doc.metadata.get("source", "Manual"),
                 )
             )
         

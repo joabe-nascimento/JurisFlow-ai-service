@@ -51,6 +51,16 @@ chains:
     prompt_file: "legal_research.yaml"
     enabled: true
 
+  - id: "sentence_analysis"
+    name: "Análise de Sentença"
+    prompt_file: "sentence_analysis.yaml"
+    enabled: true
+
+  - id: "document_comparison"
+    name: "Comparação de Documentos"
+    prompt_file: "document_comparison.yaml"
+    enabled: true
+
 # Agente e Tools disponíveis
 agent:
   enabled: true

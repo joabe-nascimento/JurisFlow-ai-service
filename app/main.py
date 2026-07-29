@@ -6,12 +6,14 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.chains.sasha_assistant import sasha_chat
 from app.orchestration.sasha_orchestrator import sasha_orchestrator
 from app.chains.contract_analysis import analyze_contract
+from app.chains.document_comparison import compare_documents
 from app.chains.document_generation import generate_document
 from app.chains.document_summary import summarize_document
 from app.chains.jurisprudence_analysis import analyze_jurisprudence
 from app.chains.jurisprudence_search import search_jurisprudence
 from app.chains.case_prediction import predict_case_outcome
 from app.chains.legal_research import research
+from app.chains.sentence_analysis import analyze_sentence
 from app.config import settings
 from app.llm.errors import LLMRateLimitError
 from app.llm.provider import get_provider_info
@@ -27,6 +29,8 @@ from app.models import (
     CaseOutcomeResponse,
     ContractAnalysisRequest,
     ContractAnalysisResponse,
+    DocumentComparisonRequest,
+    DocumentComparisonResponse,
     DocumentCreate,
     DocumentGenerationRequest,
     DocumentGenerationResponse,
@@ -43,6 +47,8 @@ from app.models import (
     PipelineRunResult,
     SearchRequest,
     SearchResult,
+    SentenceAnalysisRequest,
+    SentenceAnalysisResponse,
     StackStatus,
     TokenUsageSummary,
 )
@@ -207,6 +213,38 @@ async def chain_contract_analysis(body: ContractAnalysisRequest):
         )
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Erro na análise: {str(e)}")
+
+
+@app.post("/v1/chains/sentence-analysis", response_model=SentenceAnalysisResponse)
+async def chain_sentence_analysis(body: SentenceAnalysisRequest):
+    """
+    Chain: Análise de Sentença com RAG.
+    Identifica chances de recurso e pontos fracos da fundamentação.
+    """
+    try:
+        analysis = await analyze_sentence(body.escritorio_id, body.sentence_text)
+        return SentenceAnalysisResponse(
+            analysis=analysis,
+            escritorio_id=body.escritorio_id,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na análise: {str(e)}")
+
+
+@app.post("/v1/chains/document-comparison", response_model=DocumentComparisonResponse)
+async def chain_document_comparison(body: DocumentComparisonRequest):
+    """
+    Chain: Comparação de Documentos.
+    Compara dois documentos jurídicos e destaca diferenças relevantes.
+    """
+    try:
+        comparison = await compare_documents(body.escritorio_id, body.document_a, body.document_b)
+        return DocumentComparisonResponse(
+            comparison=comparison,
+            escritorio_id=body.escritorio_id,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Erro na comparação: {str(e)}")
 
 
 @app.post("/v1/chains/legal-research", response_model=LegalResearchResponse)

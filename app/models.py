@@ -27,6 +27,7 @@ class ScoredChunk(BaseModel):
     category: str
     content: str
     score: float
+    source: str = "Manual"
 
 
 class SearchRequest(BaseModel):
@@ -89,6 +90,27 @@ class ContractAnalysisRequest(BaseModel):
 
 class ContractAnalysisResponse(BaseModel):
     analysis: str
+    escritorio_id: str
+
+
+class SentenceAnalysisRequest(BaseModel):
+    sentence_text: str = Field(..., description="Texto da sentença a ser analisada")
+    escritorio_id: str = Field(default="default")
+
+
+class SentenceAnalysisResponse(BaseModel):
+    analysis: str
+    escritorio_id: str
+
+
+class DocumentComparisonRequest(BaseModel):
+    document_a: str = Field(..., description="Texto do primeiro documento")
+    document_b: str = Field(..., description="Texto do segundo documento")
+    escritorio_id: str = Field(default="default")
+
+
+class DocumentComparisonResponse(BaseModel):
+    comparison: str
     escritorio_id: str
 
 
