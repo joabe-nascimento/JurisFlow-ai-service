@@ -1,0 +1,67 @@
+name: CI
+
+# Roda em push/PR na main e em branches de feature.
+# Usa requirements-hostgator.txt (sem FAISS/sentence-transformers) + RETRIEVAL_METHOD=tfidf
+# para manter o CI rápido (~2 min) sem depender de GPU ou LLM real.
+on:
+  push:
+    branches: [main, staging]
+  pull_request:
+    branches: [main]
+    paths-ignore:
+      - "**.md"
+      - "docs/**"
+  schedule:
+    - cron: "0 7 * * *"   # 04:00 BRT — detecta quebras sem push recente
+  workflow_dispatch:
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    name: Testes (Python ${{ matrix.python-version }})
+    runs-on: ubuntu-latest
+
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12"]
+
+    env:
+      # Usa TF-IDF (scikit-learn) em vez de FAISS — sem GPU, sem sentence-transformers
+      RETRIEVAL_METHOD: tfidf
+      LLM_PROVIDER: openrouter
+      OPENROUTER_API_KEY: ""
+      RATE_LIMIT_ENABLED: "false"
+      AGENT_ENABLED: "false"
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Configurar Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: requirements-hostgator.txt
+
+      - name: Instalar dependências de produção (leve)
+        run: pip install -r requirements-hostgator.txt
+
+      - name: Instalar dependências de teste
+        run: pip install pytest pytest-asyncio httpx
+
+      - name: Rodar testes
+        run: pytest tests/ -v --tb=short
+
+  lint:
+    name: Lint (ruff)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - run: pip install ruff
+      - run: ruff check app/ --select E,F,W --ignore E501
